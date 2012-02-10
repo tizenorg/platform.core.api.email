@@ -1,3 +1,11 @@
+capi-messaging-email (0.1.0-9) unstable; urgency=low
+
+  * modify error and description
+  * Git: slp/api/email
+  * Tag: capi-messaging-email_0.1.0-9
+
+ -- Jongchul Park <jc0204.park@samsung.com>  Thu, 22 Dec 2011 18:45:02 +0900
+
 capi-messaging-email (0.1.0-7) unstable; urgency=low
 
   * modify error and description

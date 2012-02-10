@@ -2,7 +2,7 @@
 Source: capi-messaging-email
 Section: libs
 Priority: extra
-Maintainer: Jongchul Park <jc0204.park@samsung.com>
+Maintainer: WonYoung Choi <wy80.choi@samsung.com>
 Build-Depends: debhelper (>= 5), dlog-dev,libglib2.0-dev , libedbus-dev, capi-appfw-application-dev ,capi-base-common-dev, email-service-dev
 
 Package: capi-messaging-email
