@@ -35,13 +35,20 @@ ADD_LIBRARY(${fw_name} SHARED ${SOURCES})
 
 TARGET_LINK_LIBRARIES(${fw_name} ${${fw_name}_LDFLAGS})
 
+SET_TARGET_PROPERTIES(${fw_name}
+    PROPERTIES
+    VERSION ${FULLVER}
+    SOVERSION ${MAJORVER}
+    CLEAN_DIRECT_OUTPUT 1
+)
+
 INSTALL(TARGETS ${fw_name} DESTINATION lib)
 INSTALL(
-        DIRECTORY ${INC_DIR}/ DESTINATION include/messaging
-        FILES_MATCHING
-        PATTERN "*_private.h" EXCLUDE
-        PATTERN "${INC_DIR}/*.h"
-        )
+    DIRECTORY ${INC_DIR}/ DESTINATION include/messaging
+    FILES_MATCHING
+    PATTERN "*_private.h" EXCLUDE
+    PATTERN "${INC_DIR}/*.h"
+)
 
 SET(PC_NAME ${fw_name})
 SET(PC_REQUIRED ${dependents})
@@ -59,29 +66,29 @@ IF(UNIX)
 
 ADD_CUSTOM_TARGET (distclean @echo cleaning for source distribution)
 ADD_CUSTOM_COMMAND(
-        DEPENDS clean 
-        COMMENT "distribution clean"
-        COMMAND find
-        ARGS    . 
-        -not -name config.cmake -and \(
-        -name tester.c -or
-        -name Testing -or
-        -name CMakeFiles -or
-        -name cmake.depends -or
-        -name cmake.check_depends -or
-        -name CMakeCache.txt -or
-        -name cmake.check_cache -or
-        -name *.cmake -or
-        -name Makefile -or
-        -name core -or
-        -name core.* -or
-        -name gmon.out -or
-        -name install_manifest.txt -or
-        -name *.pc -or
-        -name *~ \)
-        | grep -v TC | xargs rm -rf
-        TARGET  distclean
-        VERBATIM
+    DEPENDS clean 
+    COMMENT "distribution clean"
+    COMMAND find
+    ARGS    . 
+    -not -name config.cmake -and \(
+    -name tester.c -or
+    -name Testing -or
+    -name CMakeFiles -or
+    -name cmake.depends -or
+    -name cmake.check_depends -or
+    -name CMakeCache.txt -or
+    -name cmake.check_cache -or
+    -name *.cmake -or
+    -name Makefile -or
+    -name core -or
+    -name core.* -or
+    -name gmon.out -or
+    -name install_manifest.txt -or
+    -name *.pc -or
+    -name *~ \)
+    | grep -v TC | xargs rm -rf
+    TARGET  distclean
+    VERBATIM
 )
 
 ENDIF(UNIX)
