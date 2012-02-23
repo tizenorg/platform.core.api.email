@@ -291,7 +291,10 @@ int email_set_body (email_h msg, const char *body)
 
 	msg_s->mail->body->plain =(char *)calloc(1,sizeof(char)*strlen("/tmp/capimail.txt")+1);
 
-	if(msg_s->mail->body->plain==NULL)return EMAIL_ERROR_OUT_OF_MEMORY;
+	if(msg_s->mail->body->plain==NULL) {
+		LOGE("[%s] OUT_OF_MEMORY(0x%08x) : fail to allocate body(plain).", __FUNCTION__, EMAIL_ERROR_OUT_OF_MEMORY);
+		return EMAIL_ERROR_OUT_OF_MEMORY;
+	}
 	
 	len =strlen("/tmp/capimail.txt")+1;
 	snprintf(msg_s->mail->body->plain,len,"%s","/tmp/capimail.txt");
@@ -507,7 +510,7 @@ int email_add_attach (email_h msg, const char *filepath)
 		
 	email_s* msg_s = (email_s* )msg;
 
-	emf_attachment_info_t*  new_attach,* tmp_attach,* next_attach;
+	emf_attachment_info_t*  new_attach,* tmp_attach;
 	emf_mail_body_t* body = msg_s->mail->body;	
 
 
@@ -529,7 +532,7 @@ int email_add_attach (email_h msg, const char *filepath)
 	if(pos==NULL)
 	{
 		new_attach->name =(char*)calloc(1,sizeof(char)*len+1);
-		snprintf(new_attach->name,len,"%s",filepath); 
+		snprintf(new_attach->name,len+1,"%s",filepath); 
 		}
 	else
 	{
@@ -547,7 +550,7 @@ int email_add_attach (email_h msg, const char *filepath)
 	
 	if(new_attach->savename==NULL)return EMAIL_ERROR_OUT_OF_MEMORY;
 	
-	snprintf(new_attach->savename,len,"%s",filepath); 
+	snprintf(new_attach->savename,len+1,"%s",filepath); 
 	new_attach->size = st.st_size;
 	new_attach->downloaded = 1;
 
@@ -556,13 +559,11 @@ int email_add_attach (email_h msg, const char *filepath)
 		body->attachment = new_attach;
 	}	
 	else{
-		next_attach=body->attachment;
-		
-		for(i=0;i<body->attachment_num;i++)
-		{
-			tmp_attach =next_attach->next;
-			next_attach =tmp_attach;
+		tmp_attach = body->attachment;
+		for (i=0; i < body->attachment_num -1; i++) {
+			tmp_attach = tmp_attach->next;
 		}
+		tmp_attach->next = new_attach;
 	}
 
 	body->attachment_num ++;
@@ -590,9 +591,10 @@ int email_remove_all_attachments (email_h msg)
 
 int email_send_message (email_h msg)
 {
-	int ret;
+	int i, ret;
 	emf_option_t option;
 	unsigned  handle;
+	emf_attachment_info_t *tmp_attach;
 
 	if(msg ==NULL )
 	{
@@ -634,15 +636,16 @@ int email_send_message (email_h msg)
 		LOGD_IF(DBG_MODE, "  plain_charset: %s\n",msg_s->mail->body->plain_charset);
 		LOGD_IF(DBG_MODE, "  html: %s\n",msg_s->mail->body->html);
 		LOGD_IF(DBG_MODE, "  attachment_num: %d\n",msg_s->mail->body->attachment_num);
-		if(msg_s->mail->body->attachment!=NULL)
-		{
-			LOGD_IF(DBG_MODE, " ----------attachment---------");
-			LOGD_IF(DBG_MODE, "  name: %s\n",msg_s->mail->body->attachment->name);
-			LOGD_IF(DBG_MODE, "  savename: %s\n",msg_s->mail->body->attachment->savename);
-			LOGD_IF(DBG_MODE, "  downloaded: %d\n",msg_s->mail->body->attachment->downloaded);
-			LOGD_IF(DBG_MODE, "  size: %d\n",msg_s->mail->body->attachment->size);
-			}
-	
+		tmp_attach = msg_s->mail->body->attachment;
+		for (i=0; i < msg_s->mail->body->attachment_num; i++) {
+			LOGD_IF(DBG_MODE, " ----------attachment[%d]---------", i+1);
+			LOGD_IF(DBG_MODE, "  name: %s\n",tmp_attach->name);
+			LOGD_IF(DBG_MODE, "  savename: %s\n",tmp_attach->savename);
+			LOGD_IF(DBG_MODE, "  downloaded: %d\n",tmp_attach->downloaded);
+			LOGD_IF(DBG_MODE, "  size: %d\n",tmp_attach->size);
+			tmp_attach = tmp_attach->next;
+			
+		}		
 	}
 
 	{
@@ -810,36 +813,37 @@ int _email_error_converter(int err)
 		
 
 		case EMF_ERROR_INVALID_PARAM:
+			LOGE("[%s] INVALID_PARAM(0x%08x) : Error from Email F/W. ret: (0x%08x) ", __FUNCTION__, EMAIL_ERROR_INVALID_PARAMETER, err);
 			return EMAIL_ERROR_INVALID_PARAMETER;
 
 		case EMF_ERROR_DB_FAILURE:
+			LOGE("[%s] DB_FAILURE(0x%08x) : Error from Email F/W. ret: (0x%08x) ", __FUNCTION__, EMAIL_ERROR_DB_FAILED, err);
 			return EMAIL_ERROR_DB_FAILED;
 
 		case EMF_ERROR_ACCOUNT_NOT_FOUND:
+			LOGE("[%s] ACCOUNT_NOT_FOUND(0x%08x) : Error from Email F/W. ret: (0x%08x) ", __FUNCTION__, EMAIL_ERROR_ACCOUNT_NOT_FOUND,err);
 			return EMAIL_ERROR_ACCOUNT_NOT_FOUND;
 
 		case EMF_ERROR_OUT_OF_MEMORY:
+			LOGE("[%s] OUT_OF_MEMORY(0x%08x) : Error from Email F/W. ret: (0x%08x) ", __FUNCTION__, EMAIL_ERROR_OUT_OF_MEMORY,err);
 			return EMAIL_ERROR_OUT_OF_MEMORY;
 			
 		// Tizen email F/W  is often using this error type when it gets a null value from server
 		//It could be caused from server or IPC.
 		case EMF_ERROR_NULL_VALUE: 
+			LOGE("[%s] NULL_VALUE(0x%08x) : Error from Email F/W. ret: (0x%08x) ", __FUNCTION__, EMAIL_ERROR_COMMUNICATION_WITH_SERVER_FAILED,err);
 			return EMAIL_ERROR_COMMUNICATION_WITH_SERVER_FAILED;
 
 		case EMF_ERROR_IPC_SOCKET_FAILURE:
+			LOGE("[%s] IPC_SOCKET_FAILURE(0x%08x) : Error from Email F/W. ret: (0x%08x) ", __FUNCTION__, EMAIL_ERROR_COMMUNICATION_WITH_SERVER_FAILED,err);
 			return EMAIL_ERROR_COMMUNICATION_WITH_SERVER_FAILED;
 
 		case EMF_ERROR_NONE:
 			return EMAIL_ERROR_NONE;
 
-
 		default:
 			LOGE("[%s] OPERATION_FAILED(0x%08x) : Error from Email F/W. ret: (0x%08x) ", __FUNCTION__, EMAIL_ERROR_OPERATION_FAILED,err);
 			return EMAIL_ERROR_OPERATION_FAILED;
-
-
-
-	
 
 	}
 }
