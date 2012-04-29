@@ -1,3 +1,35 @@
+capi-messaging-email (0.1.1-2) unstable; urgency=low
+
+  * Fix to check the filepath in email_add_attach().
+  * Git: slp/api/email
+  * Tag: capi-messaging-email_0.1.1-2
+
+ -- WonYoung Choi <wy80.choi@samsung.com>  Fri, 13 Apr 2012 15:38:47 +0900
+
+capi-messaging-email (0.1.1-1) unstable; urgency=low
+
+  * Changes for modified email-service API.
+  * Git: slp/api/email
+  * Tag: capi-messaging-email_0.1.1-1
+
+ -- Kyuho Jo <kyuho.jo@samsung.com>  Wed, 21 Mar 2012 14:39:33 +0900
+
+capi-messaging-email (0.1.0-12) unstable; urgency=low
+
+  * Bugs fix of email_add_attach(), email_remove_all_attachments(), email_add_recipient()
+  * Git: slp/api/email
+  * Tag: capi-messaging-email_0.1.0-12 
+
+ -- WonYoung Choi <wy80.choi@samsung.com>  Thu, 08 Mar 2012 22:40:36 +0900
+
+capi-messaging-email (0.1.0-11) unstable; urgency=low
+
+  * Remove -Werror option to avoid a build-break temporary.
+  * Git: slp/api/email
+  * Tag: capi-messaging-email_0.1.0-11
+
+ -- WonYoung Choi <wy80.choi@samsung.com>  Tue, 06 Mar 2012 11:54:01 +0900
+
 capi-messaging-email (0.1.0-10) unstable; urgency=low
 
   * fix a bug of email_add_attach()

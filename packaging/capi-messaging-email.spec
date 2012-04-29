@@ -1,7 +1,7 @@
 Name:       capi-messaging-email
 Summary:    Email library in Tizen Native API
-Version:    0.1.0
-Release:    1.1
+Version: 0.1.1
+Release:    2
 Group:      TO_BE/FILLED_IN
 License:    Apache-2.0
 Source0:    %{name}-%{version}.tar.gz
@@ -32,9 +32,8 @@ Requires: %{name} = %{version}-%{release}
 
 
 %build
-FULLVER=%{version}
-MAJORVER=`echo ${FULLVER} | cut -d '.' -f 1`
-cmake . -DCMAKE_INSTALL_PREFIX=/usr -DFULLVER=${FULLVER} -DMAJORVER=${MAJORVER}
+MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`  
+cmake . -DCMAKE_INSTALL_PREFIX=/usr -DFULLVER=%{version} -DMAJORVER=${MAJORVER} 
 
 
 make %{?jobs:-j%jobs}
@@ -49,9 +48,10 @@ rm -rf %{buildroot}
 
 
 %files
-%{_libdir}/libcapi-messaging-email.so*
+%{_libdir}/libcapi-messaging-email.so.*
 
 %files devel
 %{_includedir}/messaging/*.h
 %{_libdir}/pkgconfig/*.pc
+%{_libdir}/libcapi-messaging-email.so
 

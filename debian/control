@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 5), dlog-dev,libglib2.0-dev , libedbus-dev, capi-ap
 
 Package: capi-messaging-email
 Architecture: any
-Depends: ${shilbs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Email library in Tizen Native API
 
 Package: capi-messaging-email-dev
