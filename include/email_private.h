@@ -27,13 +27,11 @@ extern "C"
 #define MAX_ATTACHEMENT_COUNT           50
 
 #define MAX_RECIPIENT_ADDRESS_LEN 	234
-#define MAX_RECIPIENT_COUNT		50 
-#define MAX_RECIPIENT_ADDRESSES_LEN	(MAX_RECIPIENT_ADDRESS_LEN*MAX_RECIPIENT_COUNT)
 
 typedef struct _email_s {
-	emf_mailbox_t *mbox;
-	emf_mail_data_t *mail;
-	emf_attachment_data_t attachment[MAX_ATTACHEMENT_COUNT];
+	email_mailbox_t *mbox;
+	email_mail_data_t *mail;
+	email_attachment_data_t attachment[MAX_ATTACHEMENT_COUNT];
 } email_s;
 
 typedef  struct _mailstatus_s {

@@ -15,8 +15,8 @@
  */
 
 
-#ifndef __EMAIL_ERROR_H__
-#define __EMAIL_ERROR_H__
+#ifndef __EMAILAPI_ERROR_H__
+#define __EMAILAPI_ERROR_H__
 
 #include <tizen.h>
 
@@ -50,8 +50,6 @@ typedef enum
 	EMAIL_ERROR_OPERATION_FAILED = TIZEN_ERROR_MESSAGING_CLASS|0x202,  /**< Operation failed */
 	EMAIL_ERROR_ACCOUNT_NOT_FOUND  	  = TIZEN_ERROR_MESSAGING_CLASS|0x203,  /**< Email account not found */
 	EMAIL_ERROR_DB_FAILED  	  = TIZEN_ERROR_MESSAGING_CLASS|0x204,          /**< Email database failed */
-
-	
 } email_error_e;
 
 /**
@@ -62,4 +60,4 @@ typedef enum
 }
 #endif
 
-#endif /* __EMAIL_ERROR_H__*/
+#endif /* __EMAILAPI_ERROR_H__*/

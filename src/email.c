@@ -25,6 +25,16 @@
 #include <email-api-init.h>
 #include <email-api.h>
 
+#define EMAIL_API_ERROR_NONE               EMAIL_ERROR_NONE
+#define EMAIL_API_ERROR_OUT_OF_MEMORY      EMAIL_ERROR_OUT_OF_MEMORY
+#define EMAIL_API_ERROR_ACCOUNT_NOT_FOUND  EMAIL_ERROR_ACCOUNT_NOT_FOUND
+#define EMAIL_API_ERROR_OUT_OF_MEMORY      EMAIL_ERROR_OUT_OF_MEMORY
+
+#undef EMAIL_ERROR_NONE
+#undef EMAIL_ERROR_OUT_OF_MEMORY
+#undef EMAIL_ERROR_ACCOUNT_NOT_FOUND
+#undef EMAIL_ERROR_OUT_OF_MEMORY
+
 #include<email.h>
 #include<email_private.h>
 #include<email_types.h>
@@ -34,7 +44,13 @@
 #undef LOG_TAG
 #endif
 #define LOG_TAG "CAPI_EMAIL"
-#define DBG_MODE (0)
+#define DBG_MODE (1)
+
+#define EM_SAFE_STRDUP(s) \
+	({\
+		char* _s = (char*)s;\
+		(_s)? strdup(_s) : NULL;\
+	})
 
 typedef struct {
 	email_message_sent_cb  callback;
@@ -46,6 +62,8 @@ GSList *gEmailcbList= NULL;
 //------------- Utility Or Miscellaneous
 void _email_add_dbus_filter(void);
 int _email_error_converter(int err, const char *func, int line);
+int _email_copy_handle(email_s **dst_handle, email_s *src_handle);
+void _email_free_cb_context(email_cb_context *cbcontext);
 
 #define CONVERT_ERROR(err) _email_error_converter(err, __FUNCTION__, __LINE__);
 
@@ -55,22 +73,27 @@ int email_create_message(email_h *msg)
 {
 	int ret;
 	email_s * msg_s = NULL;
-	emf_account_t* account = NULL;
-	int cnt,len;
+	email_account_t* account = NULL;
+	int len;
+
+	if(msg == NULL) {
+		LOGE("[%s] INVALID_PARAMETER(0x%08x) : msg is NULL.", __FUNCTION__, EMAIL_ERROR_INVALID_PARAMETER);
+		return EMAIL_ERROR_INVALID_PARAMETER;
+	}
 
 	// 1. create service for ipc
 	ret=email_service_begin();
 	msg_s= (email_s*)calloc(1,sizeof(email_s));
 	if (msg_s != NULL)
 	{
-		msg_s->mail = (emf_mail_data_t *)calloc(1,sizeof(emf_mail_data_t));
+		msg_s->mail = (email_mail_data_t *)calloc(1,sizeof(email_mail_data_t));
 		if (msg_s->mail == NULL) {
 			LOGE("[%s] OUT_OF_MEMORY(0x%08x) : fail to create msg_s->mail", __FUNCTION__, EMAIL_ERROR_OUT_OF_MEMORY);
 			free(msg_s);
 			return EMAIL_ERROR_OUT_OF_MEMORY;
 		}
 
-		msg_s->mbox = (emf_mailbox_t *)calloc(1,sizeof(emf_mailbox_t));
+		msg_s->mbox = (email_mailbox_t *)calloc(1,sizeof(email_mailbox_t));
 		if (msg_s->mbox == NULL)
 		{
 			LOGE("[%s] OUT_OF_MEMORY(0x%08x) : fail to create msg_s->mbox", __FUNCTION__, EMAIL_ERROR_OUT_OF_MEMORY);
@@ -88,64 +111,41 @@ int email_create_message(email_h *msg)
 
 		
 	//return error from F/W 
-	//EMF_ERROR_INVALID_PARAM/EMF_ERROR_NONE/EMF_ERROR_DB_FAILURE/EMF_ERROR_ACCOUNT_NOT_FOUND/EMF_ERROR_OUT_OF_MEMORY
+	//EMAIL_ERROR_INVALID_PARAM/EMAIL_API_ERROR_NONE/EMAIL_ERROR_DB_FAILURE/EMAIL_ERROR_ACCOUNT_NOT_FOUND/EMAIL_ERROR_OUT_OF_MEMORY
 	int default_account_id = 0;
-	if (!(ret = email_load_default_account_id(&default_account_id))) {
+	if ((ret = email_load_default_account_id(&default_account_id)) != EMAIL_ERROR_NONE) {
 		LOGE("[%s] email_load_default_account_id failed : [%d]",__FUNCTION__, ret);
 		return CONVERT_ERROR(ret);
 	}
 	
 	ret = email_get_account(default_account_id, GET_FULL_DATA, &account);
-	if(ret!=EMF_ERROR_NONE) return CONVERT_ERROR(ret);
+	if(ret!=EMAIL_API_ERROR_NONE) return CONVERT_ERROR(ret);
 
-	LOGD_IF(DBG_MODE,"account address = %s",account->email_addr);
+	LOGD_IF(DBG_MODE,"account address = %s",account->user_email_address);
 	LOGD_IF(DBG_MODE,"account id = %d",account->account_id);
 	LOGD_IF(DBG_MODE,"account name = %s",account->account_name);
-	LOGD_IF(DBG_MODE,"account user_name = %s",account->user_name);
-
-	emf_mailbox_t* mailbox_list = NULL;
-	int sync_type =1;
-	email_get_mailbox_list(account->account_id, sync_type, &mailbox_list, &cnt);
-
+	LOGD_IF(DBG_MODE,"account user_name = %s",account->incoming_server_user_name);
 	
-	msg_s->mail->full_address_from = (char *)calloc(1,sizeof(char)*(strlen(account->user_name)+strlen(account->email_addr)+1+1+1+1+1));//"++"+<+ address +> + NULL
-	len= (strlen(account->user_name)+strlen(account->email_addr)+1+1+1+1+1);
+	msg_s->mail->full_address_from = (char *)calloc(1,sizeof(char)*(strlen(account->incoming_server_user_name)+strlen(account->user_email_address)+1+1+1+1+1));//"++"+<+ address +> + NULL
+	len= (strlen(account->incoming_server_user_name)+strlen(account->user_email_address)+1+1+1+1+1);
 	char *strfrom = msg_s->mail->full_address_from;
 
-	snprintf(strfrom,len,"%s%s%s%s%s%s","\"",account->user_name,"\"","<",account->email_addr,">");
+	snprintf(strfrom,len,"%s%s%s%s%s%s","\"",account->incoming_server_user_name,"\"","<",account->user_email_address,">");
 
 	//mbox
-	emf_mailbox_t * mbox =msg_s->mbox;
-	mbox->name  = (char *)calloc(1,sizeof(char)*strlen("OUTBOX")+1);
-	if(mbox->name ==NULL){
-		LOGE("[%s] OUT_OF_MEMORY(0x%08x) : fail to create mbox->name", __FUNCTION__, EMAIL_ERROR_OUT_OF_MEMORY);
-		return EMAIL_ERROR_OUT_OF_MEMORY;
+	email_mailbox_t *mbox =msg_s->mbox;
+
+	if ( (ret = email_get_mailbox_by_mailbox_type(default_account_id, EMAIL_MAILBOX_TYPE_OUTBOX, &mbox)) != EMAIL_API_ERROR_NONE) {
+		LOGE("[%s] email_get_mailbox_by_mailbox_type failed %d", __FUNCTION__, ret);
+		return EMAIL_ERROR_DB_FAILED;
 	}
-	
-	len = strlen("OUTBOX")+1;
-	snprintf(mbox->name,len,"%s","OUTBOX");
-	mbox->mailbox_type = EMF_MAILBOX_TYPE_OUTBOX;
-	mbox->alias  = (char *)calloc(1,sizeof(char)*strlen("Outbox")+1);
-	if(mbox->alias ==NULL){
-		LOGE("[%s] OUT_OF_MEMORY(0x%08x) : fail to create mbox->alias", __FUNCTION__, EMAIL_ERROR_OUT_OF_MEMORY);
-		return EMAIL_ERROR_OUT_OF_MEMORY;
-	}
-	
-	len = strlen("Outbox")+1;
-	snprintf(mbox->alias,len,"%s","Outbox");
-	
-	mbox->local = 1;
-	mbox->synchronous = 1;
-	mbox->account_id = account->account_id;
-	mbox->next = NULL;
-	mbox->mail_slot_size = 50;
 
 	//info
 	msg_s->mail->account_id = account->account_id;
 	msg_s->mail->flags_draft_field = 1;
 	msg_s->mail->flags_seen_field = 1;
-	msg_s->mail->priority = EMF_MAIL_PRIORITY_NORMAL;
-	msg_s->mail->mailbox_name = strdup(mbox->name);
+	msg_s->mail->priority = EMAIL_MAIL_PRIORITY_NORMAL;
+	msg_s->mail->mailbox_id = mbox->mailbox_id;
 	msg_s->mail->mailbox_type = mbox->mailbox_type;
 	msg_s->mail->attachment_count = 0;
 
@@ -158,10 +158,10 @@ int email_destroy_message(email_h msg)
 	int ret;
 
 
-	if(msg ==NULL ){
+	if(msg == NULL) {
 		LOGE("[%s] INVALID_PARAMETER(0x%08x) : msg is NULL.", __FUNCTION__, EMAIL_ERROR_INVALID_PARAMETER);
 		return EMAIL_ERROR_INVALID_PARAMETER;
-		}
+	}
 		
 	email_s* msg_s = (email_s* )msg;
 
@@ -179,7 +179,7 @@ int email_destroy_message(email_h msg)
 	
 	ret=email_service_end();
 	
-	if(ret!=EMF_ERROR_NONE){
+	if(ret!=EMAIL_API_ERROR_NONE){
 		LOGE("[%s] OPERATION_FAILED(0x%08x) : Finishing email service failed", __FUNCTION__, EMAIL_ERROR_OPERATION_FAILED);
 		return EMAIL_ERROR_OPERATION_FAILED;
 		}
@@ -400,7 +400,7 @@ int email_add_attach (email_h msg, const char *filepath)
 	email_s *msg_s = (email_s *)msg;
 
 	int attachment_count = msg_s->mail->attachment_count;
-	emf_attachment_data_t *new_attach = msg_s->attachment;
+	email_attachment_data_t *new_attach = msg_s->attachment;
 
 	stat(filepath, &st);
 	if(st.st_size > 10*1024*1024)
@@ -462,12 +462,12 @@ int email_remove_all_attachments (email_h msg)
 }
 
 
-int email_send_message (email_h msg)
+int email_send_message (email_h msg, bool save_to_sentbox)
 {
 	int i, ret;
-	emf_option_t option;
+	email_option_t option;
 	unsigned  handle;
-	emf_attachment_data_t *tmp_attach = NULL;
+	email_attachment_data_t *tmp_attach = NULL;
 	struct tm *struct_time;
 
 	if (msg == NULL) {
@@ -526,31 +526,31 @@ int email_send_message (email_h msg)
 
 	
 	{
-		emf_mailbox_t * box;
+		email_mailbox_t * box;
 		box=msg_s->mbox;
 		LOGD_IF(DBG_MODE, " ----------box---------");
-		LOGD_IF(DBG_MODE, "  emf_mailbox_t \n");
-		LOGD_IF(DBG_MODE, "  name: %s\n",box->name);
+		LOGD_IF(DBG_MODE, "  email_mailbox_t \n");
+		LOGD_IF(DBG_MODE, "  name: %s\n",box->mailbox_name);
 		LOGD_IF(DBG_MODE, "  mailbox_type: %d\n",box->mailbox_type);
 		LOGD_IF(DBG_MODE, "  alias: %s\n",box->alias);
 		LOGD_IF(DBG_MODE, "  unread_count: %d\n",box->unread_count);
 		LOGD_IF(DBG_MODE, "  total_mail_count_on_local: %d\n",box->total_mail_count_on_local);
 		LOGD_IF(DBG_MODE, "  total_mail_count_on_server: %d\n",box->total_mail_count_on_server);
 		LOGD_IF(DBG_MODE, "  local: %d\n",box->local);
-		LOGD_IF(DBG_MODE, "  synchronous: %d\n",box->synchronous);
 		LOGD_IF(DBG_MODE, "  account_id: %d\n",box->account_id);
-		LOGD_IF(DBG_MODE, "  has_archived_mails: %d\n",box->has_archived_mails);
 		LOGD_IF(DBG_MODE, "  mail_slot_size: %d\n",box->mail_slot_size);
-		LOGD_IF(DBG_MODE, "  account_name: %s\n",box->account_name);
 	}
 
 
 	ret=email_add_mail(msg_s->mail, msg_s->attachment, msg_s->mail->attachment_count, NULL, 0);
 	ret=CONVERT_ERROR(ret);
 	
-	option.keep_local_copy = 1;
 
-	ret=email_send_mail(msg_s->mbox, msg_s->mail->mail_id, &option, &handle);
+	memset(&option, 0x00, sizeof(email_option_t));
+	option.keep_local_copy = save_to_sentbox ? 1 : 0;
+	
+
+	ret=email_send_mail(msg_s->mail->mail_id, &option, &handle);
 
 
 	ret=CONVERT_ERROR(ret);
@@ -577,8 +577,7 @@ email_cb_context * _email_search_callback_by_emailid(int mailid)
 			cbContext= (email_cb_context *)node->data; 
 			if(cbContext->handle->mail->mail_id == mailid)
 			{
-				
-					return cbContext;
+				return cbContext;
 			}
 				
 				
@@ -594,6 +593,7 @@ int email_set_message_sent_cb (email_h handle, email_message_sent_cb cb, void *u
 {
 	int count;
 	int ntmp=0;
+	int ret = EMAIL_ERROR_NONE;
 	GSList * node;
 	email_cb_context *cbContext;
 	count = g_slist_length( gEmailcbList );
@@ -601,29 +601,34 @@ int email_set_message_sent_cb (email_h handle, email_message_sent_cb cb, void *u
 	if(handle ==NULL || cb == NULL)return EMAIL_ERROR_INVALID_PARAMETER;
 		
 	
-	email_s* msg_s = (email_s* )handle;
+	email_s* msg_s = NULL;
 	
 	while( count )
 	{
 		node = g_slist_nth( gEmailcbList, ntmp );
 			
-			if( node == NULL )
-				break;
-			
-			cbContext= (email_cb_context *)node->data; 
-			if(cbContext->handle == (email_s*)handle)
-			{
-					gEmailcbList=g_slist_remove(gEmailcbList,node);
-					break;
-			}
-				
+		if( node == NULL )
+			break;
+		
+		cbContext= (email_cb_context *)node->data; 
+		if(cbContext->handle == (email_s*)handle)
+		{
+			gEmailcbList=g_slist_remove(gEmailcbList,node);
+			_email_free_cb_context(cbContext);	
+			break;
+		}
 				
 		ntmp++;	
 		count--;
 	}
 
+	if ((ret = _email_copy_handle(&msg_s, (email_s *)handle)) != EMAIL_ERROR_NONE) {
+		LOGE("[%s] _email_copy_handle failed", __FUNCTION__);
+		return ret;
+	}
+
 	email_cb_context * cbcontext= (email_cb_context*)calloc(1, sizeof(email_cb_context) );
-	
+
 	cbcontext->handle = msg_s;
 	cbcontext->callback=cb;
 	cbcontext->user_data =user_data;
@@ -658,48 +663,48 @@ int email_unset_message_sent_cb (email_h msg)
 		if(cbContext->handle == msg_s)
 		{	
 			gEmailcbList= g_slist_remove(gEmailcbList,node);
-				break;
+			_email_free_cb_context(cbContext);
+			break;
 		}
 		
 
 			
 	}
+
 	return EMAIL_ERROR_NONE;
-
-
 }
 
 int _email_error_converter(int err, const char *func, int line)
 {
 	switch(err) 
 	{
-		case EMF_ERROR_INVALID_PARAM:
+		case EMAIL_ERROR_INVALID_PARAM:
 			LOGE("[%s:%d] INVALID_PARAM(0x%08x) : Error from Email F/W. ret: (0x%08x) ", func, line, EMAIL_ERROR_INVALID_PARAMETER, err);
 			return EMAIL_ERROR_INVALID_PARAMETER;
 
-		case EMF_ERROR_DB_FAILURE:
+		case EMAIL_ERROR_DB_FAILURE:
 			LOGE("[%s:%d] DB_FAILURE(0x%08x) : Error from Email F/W. ret: (0x%08x) ", func, line, EMAIL_ERROR_DB_FAILED, err);
 			return EMAIL_ERROR_DB_FAILED;
 
-		case EMF_ERROR_ACCOUNT_NOT_FOUND:
+		case EMAIL_API_ERROR_ACCOUNT_NOT_FOUND:
 			LOGE("[%s:%d] ACCOUNT_NOT_FOUND(0x%08x) : Error from Email F/W. ret: (0x%08x) ", func, line, EMAIL_ERROR_ACCOUNT_NOT_FOUND,err);
 			return EMAIL_ERROR_ACCOUNT_NOT_FOUND;
 
-		case EMF_ERROR_OUT_OF_MEMORY:
+		case EMAIL_API_ERROR_OUT_OF_MEMORY:
 			LOGE("[%s:%d] OUT_OF_MEMORY(0x%08x) : Error from Email F/W. ret: (0x%08x) ", func, line, EMAIL_ERROR_OUT_OF_MEMORY,err);
 			return EMAIL_ERROR_OUT_OF_MEMORY;
 			
 		// Tizen email F/W  is often using this error type when it gets a null value from server
 		//It could be caused from server or IPC.
-		case EMF_ERROR_NULL_VALUE: 
+		case EMAIL_ERROR_NULL_VALUE:
 			LOGE("[%s:%d] NULL_VALUE(0x%08x) : Error from Email F/W. ret: (0x%08x) ", func, line, EMAIL_ERROR_COMMUNICATION_WITH_SERVER_FAILED,err);
 			return EMAIL_ERROR_COMMUNICATION_WITH_SERVER_FAILED;
 
-		case EMF_ERROR_IPC_SOCKET_FAILURE:
+		case EMAIL_ERROR_IPC_SOCKET_FAILURE:
 			LOGE("[%s:%d] IPC_SOCKET_FAILURE(0x%08x) : Error from Email F/W. ret: (0x%08x) ", func, line, EMAIL_ERROR_COMMUNICATION_WITH_SERVER_FAILED,err);
 			return EMAIL_ERROR_COMMUNICATION_WITH_SERVER_FAILED;
 
-		case EMF_ERROR_NONE:
+		case EMAIL_API_ERROR_NONE:
 			return EMAIL_ERROR_NONE;
 
 		default:
@@ -748,19 +753,19 @@ static void _monitorSendStatusCb(void* data, DBusMessage *message)
 
 								 switch(errorcode)
 					                     {
-					                        case EMF_ERROR_NO_SIM_INSERTED:
-					                        case EMF_ERROR_FLIGHT_MODE:
-					                        case EMF_ERROR_SMTP_SEND_FAILURE:
-					                        case EMF_ERROR_NO_SUCH_HOST:
-					                        case EMF_ERROR_CONNECTION_FAILURE:
-					                        case EMF_ERROR_CONNECTION_BROKEN:
-					                        case EMF_ERROR_INVALID_SERVER:
-					                        case EMF_ERROR_NO_RESPONSE:
+					                        case EMAIL_ERROR_NO_SIM_INSERTED:
+					                        case EMAIL_ERROR_FLIGHT_MODE:
+					                        case EMAIL_ERROR_SMTP_SEND_FAILURE:
+					                        case EMAIL_ERROR_NO_SUCH_HOST:
+					                        case EMAIL_ERROR_CONNECTION_FAILURE:
+					                        case EMAIL_ERROR_CONNECTION_BROKEN:
+					                        case EMAIL_ERROR_INVALID_SERVER:
+					                        case EMAIL_ERROR_NO_RESPONSE:
 					                            
 					                            break;
 
 					                        default:
-												;
+												break;
 					                     }
 								
 								 cbContext->callback((email_h)cbContext->handle,(email_sending_e)EMAIL_SENDING_FAILED ,cbContext->user_data);
@@ -775,6 +780,7 @@ static void _monitorSendStatusCb(void* data, DBusMessage *message)
 			}
 	}
 }
+
 void _email_add_dbus_filter(void)
 {
 	
@@ -811,4 +817,138 @@ void _email_add_dbus_filter(void)
 	{
 		LOGD_IF(DBG_MODE, "Failed in e_dbus_signal_handler_add()");
 	}
+}
+
+int _email_copy_mail_data(email_mail_data_t **dst_mail_data, email_mail_data_t *src_mail_data)
+{
+	email_mail_data_t *temp_mail_data = NULL;
+	
+	temp_mail_data = (email_mail_data_t *)calloc(1, sizeof(email_mail_data_t));
+	if (temp_mail_data == NULL) {
+		LOGE("[%s] OUT_OF_MEMORY(0x%08x) : fail to create email_mail_data_t", __FUNCTION__, EMAIL_ERROR_OUT_OF_MEMORY);
+		return EMAIL_ERROR_OUT_OF_MEMORY;
+	}
+
+	temp_mail_data->mail_id                 = src_mail_data->mail_id;
+	temp_mail_data->account_id              = src_mail_data->account_id;
+	temp_mail_data->mailbox_id              = src_mail_data->mailbox_id;
+	temp_mail_data->mailbox_type            = src_mail_data->mailbox_type;
+	temp_mail_data->subject                 = EM_SAFE_STRDUP(src_mail_data->subject);
+	temp_mail_data->date_time               = src_mail_data->date_time;
+	temp_mail_data->server_mail_status      = src_mail_data->server_mail_status;
+	temp_mail_data->server_mailbox_name     = EM_SAFE_STRDUP(src_mail_data->server_mailbox_name);
+	temp_mail_data->server_mail_id          = EM_SAFE_STRDUP(src_mail_data->server_mail_id);
+	temp_mail_data->message_id              = EM_SAFE_STRDUP(src_mail_data->message_id);
+	temp_mail_data->full_address_from       = EM_SAFE_STRDUP(src_mail_data->full_address_from);
+	temp_mail_data->full_address_reply      = EM_SAFE_STRDUP(src_mail_data->full_address_reply);
+	temp_mail_data->full_address_to         = EM_SAFE_STRDUP(src_mail_data->full_address_to);
+	temp_mail_data->full_address_cc         = EM_SAFE_STRDUP(src_mail_data->full_address_cc);
+	temp_mail_data->full_address_bcc        = EM_SAFE_STRDUP(src_mail_data->full_address_bcc);
+	temp_mail_data->full_address_return     = EM_SAFE_STRDUP(src_mail_data->full_address_return);
+	temp_mail_data->email_address_sender    = EM_SAFE_STRDUP(src_mail_data->email_address_sender);
+	temp_mail_data->email_address_recipient = EM_SAFE_STRDUP(src_mail_data->email_address_recipient);
+	temp_mail_data->alias_sender            = EM_SAFE_STRDUP(src_mail_data->alias_sender);
+	temp_mail_data->alias_recipient         = EM_SAFE_STRDUP(src_mail_data->alias_recipient);
+	temp_mail_data->body_download_status    = src_mail_data->body_download_status;
+	temp_mail_data->file_path_plain         = EM_SAFE_STRDUP(src_mail_data->file_path_plain);
+	temp_mail_data->file_path_html          = EM_SAFE_STRDUP(src_mail_data->file_path_html);
+	temp_mail_data->file_path_mime_entity   = EM_SAFE_STRDUP(src_mail_data->file_path_mime_entity);
+	temp_mail_data->mail_size               = src_mail_data->mail_size;
+	temp_mail_data->flags_seen_field        = src_mail_data->flags_seen_field;
+	temp_mail_data->flags_deleted_field     = src_mail_data->flags_deleted_field;
+	temp_mail_data->flags_flagged_field     = src_mail_data->flags_flagged_field;
+	temp_mail_data->flags_answered_field    = src_mail_data->flags_answered_field;
+	temp_mail_data->flags_recent_field      = src_mail_data->flags_recent_field;
+	temp_mail_data->flags_draft_field       = src_mail_data->flags_draft_field;
+	temp_mail_data->flags_forwarded_field   = src_mail_data->flags_forwarded_field;
+	temp_mail_data->DRM_status              = src_mail_data->DRM_status;
+	temp_mail_data->priority                = src_mail_data->priority;
+	temp_mail_data->save_status             = src_mail_data->save_status;
+	temp_mail_data->lock_status             = src_mail_data->lock_status;
+	temp_mail_data->report_status           = src_mail_data->report_status;
+	temp_mail_data->attachment_count        = src_mail_data->attachment_count;
+	temp_mail_data->inline_content_count    = src_mail_data->inline_content_count;
+	temp_mail_data->thread_id               = src_mail_data->thread_id;
+	temp_mail_data->thread_item_count       = src_mail_data->thread_item_count;
+	temp_mail_data->preview_text            = EM_SAFE_STRDUP(src_mail_data->preview_text);
+	temp_mail_data->meeting_request_status  = src_mail_data->meeting_request_status;
+	temp_mail_data->message_class           = src_mail_data->message_class;
+	temp_mail_data->digest_type             = src_mail_data->digest_type;
+	temp_mail_data->smime_type              = src_mail_data->smime_type;
+
+	*dst_mail_data = temp_mail_data;
+
+	return EMAIL_ERROR_NONE;
+}
+
+int _email_copy_mailbox(email_mailbox_t **dst_mailbox, email_mailbox_t *src_mailbox)
+{
+	email_mailbox_t *temp_mailbox = NULL;
+
+	temp_mailbox = (email_mailbox_t *)calloc(1,sizeof(email_mailbox_t));
+	if (temp_mailbox == NULL)
+	{
+		LOGE("[%s] OUT_OF_MEMORY(0x%08x) : fail to create mailbox", __FUNCTION__, EMAIL_ERROR_OUT_OF_MEMORY);
+		return EMAIL_ERROR_OUT_OF_MEMORY;
+	}
+
+	temp_mailbox->mailbox_id                    = src_mailbox->mailbox_id;
+	temp_mailbox->mailbox_name                   = EM_SAFE_STRDUP(src_mailbox->mailbox_name);
+	temp_mailbox->mailbox_type                  = src_mailbox->mailbox_type;
+	temp_mailbox->alias                         = EM_SAFE_STRDUP(src_mailbox->alias);
+	temp_mailbox->unread_count                  = src_mailbox->unread_count;
+	temp_mailbox->total_mail_count_on_local     = src_mailbox->total_mail_count_on_local;
+	temp_mailbox->total_mail_count_on_server    = src_mailbox->total_mail_count_on_server;
+	temp_mailbox->local                         = src_mailbox->local;
+	temp_mailbox->account_id                    = src_mailbox->account_id;
+	temp_mailbox->mail_slot_size                = src_mailbox->mail_slot_size;
+	temp_mailbox->last_sync_time                = src_mailbox->last_sync_time;
+
+	*dst_mailbox = temp_mailbox;
+
+	return EMAIL_ERROR_NONE;
+}
+
+
+int _email_copy_handle(email_s **dst_handle, email_s *src_handle)
+{
+	int ret = EMAIL_ERROR_NONE;
+	email_s *msg_s = NULL;
+	
+	msg_s = (email_s *)calloc(1,sizeof(email_s));
+	if ((ret = _email_copy_mail_data(&msg_s->mail, src_handle->mail)) != EMAIL_ERROR_NONE) {
+  		LOGE("[%s] _email_copy_mail_data failed", __FUNCTION__);
+		return ret;
+	}
+
+	if ((ret = _email_copy_mailbox(&msg_s->mbox, src_handle->mbox)) != EMAIL_ERROR_NONE) {
+		LOGE("[%s] _email_copy_mailbox failed", __FUNCTION__);
+		return ret;
+	}
+
+	*dst_handle = msg_s;
+	return ret;
+}
+
+void _email_free_cb_context(email_cb_context *cbcontext)
+{
+	if(cbcontext == NULL) {
+		LOGE("[%s] INVALID_PARAMETER(0x%08x) : msg is NULL.", __FUNCTION__, EMAIL_ERROR_INVALID_PARAMETER);
+		return;
+	}
+		
+	email_s* msg_s = cbcontext->handle;
+
+	if(msg_s)
+	{
+		if (msg_s->mail)
+			email_free_mail_data(&msg_s->mail, 1);
+
+		if (msg_s->mbox)
+			email_free_mailbox(&msg_s->mbox, 1);
+
+		free(msg_s);		
+	}
+
+	cbcontext = NULL;
 }

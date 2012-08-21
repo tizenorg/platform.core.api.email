@@ -103,7 +103,6 @@ int email_set_body(email_h email, const char *body);
  *
  * @remarks Email address should be in standard format (as described in
  * Internet standards RFC 5321 and RFC 5322).\n
- * The maximum number of recipients per message is 10.
  *
  * @param[in]	email	The handle to the email message
  * @param[in]   type    The recipient type
@@ -173,6 +172,7 @@ int email_remove_all_attachments(email_h email);
  *
  *
  * @param[in]	email	The handle to the email message 
+ * @param[in]	save_to_sentbox Set to true to save the message in the sentbox, else false
  * @return  0 on success, otherwise a negative error value.
  * @retval  #EMAIL_ERROR_NONE Successful
  * @retval  #EMAIL_ERROR_COMMUNICATION_WITH_SERVER_FAILED Communication with server failed.
@@ -182,7 +182,7 @@ int email_remove_all_attachments(email_h email);
  * @see email_set_message_sent_cb()
  * @see email_add_recipient()
  */
-int email_send_message(email_h email);
+int email_send_message(email_h email, bool save_to_sentbox);
 
 
 /**
