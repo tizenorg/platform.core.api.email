@@ -48,7 +48,7 @@ extern "C"
  * @return  0 on success, otherwise a negative error value.
  * @retval	#EMAIL_ERROR_NONE Successful
  * @retval	#EMAIL_ERROR_OUT_OF_MEMORY Out of memory
- * @retval	#EMAIL_ERROR_ACCOUNT_NOT_FOUND  	 Email account not found 
+ * @retval	#EMAIL_ERROR_ACCOUNT_NOT_FOUND  	 Email account not found
  *
  * @see email_destroy_message()
  */

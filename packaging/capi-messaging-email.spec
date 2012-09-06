@@ -1,6 +1,6 @@
 Name:       capi-messaging-email
 Summary:    Email library in Tizen Native API
-Version:    0.1.5
+Version:    0.1.6
 Release:    3
 Group:      TO_BE/FILLED_IN
 License:    TO BE FILLED IN

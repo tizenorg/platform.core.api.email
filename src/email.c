@@ -25,15 +25,13 @@
 #include <email-api-init.h>
 #include <email-api.h>
 
-#define EMAIL_API_ERROR_NONE               EMAIL_ERROR_NONE
-#define EMAIL_API_ERROR_OUT_OF_MEMORY      EMAIL_ERROR_OUT_OF_MEMORY
-#define EMAIL_API_ERROR_ACCOUNT_NOT_FOUND  EMAIL_ERROR_ACCOUNT_NOT_FOUND
-#define EMAIL_API_ERROR_OUT_OF_MEMORY      EMAIL_ERROR_OUT_OF_MEMORY
+#define EMAIL_API_ERROR_NONE			1
+#define EMAIL_API_ERROR_OUT_OF_MEMORY		-1028
+#define EMAIL_API_ERROR_ACCOUNT_NOT_FOUND	-1014
 
 #undef EMAIL_ERROR_NONE
 #undef EMAIL_ERROR_OUT_OF_MEMORY
 #undef EMAIL_ERROR_ACCOUNT_NOT_FOUND
-#undef EMAIL_ERROR_OUT_OF_MEMORY
 
 #include<email.h>
 #include<email_private.h>
@@ -113,7 +111,7 @@ int email_create_message(email_h *msg)
 	//return error from F/W 
 	//EMAIL_ERROR_INVALID_PARAM/EMAIL_API_ERROR_NONE/EMAIL_ERROR_DB_FAILURE/EMAIL_ERROR_ACCOUNT_NOT_FOUND/EMAIL_ERROR_OUT_OF_MEMORY
 	int default_account_id = 0;
-	if ((ret = email_load_default_account_id(&default_account_id)) != EMAIL_ERROR_NONE) {
+	if ((ret = email_load_default_account_id(&default_account_id)) != EMAIL_API_ERROR_NONE) {
 		LOGE("[%s] email_load_default_account_id failed : [%d]",__FUNCTION__, ret);
 		return CONVERT_ERROR(ret);
 	}
@@ -678,36 +676,36 @@ int _email_error_converter(int err, const char *func, int line)
 {
 	switch(err) 
 	{
-		case EMAIL_ERROR_INVALID_PARAM:
+		case EMAIL_ERROR_INVALID_PARAM :
 			LOGE("[%s:%d] INVALID_PARAM(0x%08x) : Error from Email F/W. ret: (0x%08x) ", func, line, EMAIL_ERROR_INVALID_PARAMETER, err);
 			return EMAIL_ERROR_INVALID_PARAMETER;
 
-		case EMAIL_ERROR_DB_FAILURE:
+		case EMAIL_ERROR_DB_FAILURE :
 			LOGE("[%s:%d] DB_FAILURE(0x%08x) : Error from Email F/W. ret: (0x%08x) ", func, line, EMAIL_ERROR_DB_FAILED, err);
 			return EMAIL_ERROR_DB_FAILED;
 
-		case EMAIL_API_ERROR_ACCOUNT_NOT_FOUND:
+		case EMAIL_API_ERROR_ACCOUNT_NOT_FOUND :
 			LOGE("[%s:%d] ACCOUNT_NOT_FOUND(0x%08x) : Error from Email F/W. ret: (0x%08x) ", func, line, EMAIL_ERROR_ACCOUNT_NOT_FOUND,err);
 			return EMAIL_ERROR_ACCOUNT_NOT_FOUND;
 
-		case EMAIL_API_ERROR_OUT_OF_MEMORY:
+		case EMAIL_API_ERROR_OUT_OF_MEMORY :
 			LOGE("[%s:%d] OUT_OF_MEMORY(0x%08x) : Error from Email F/W. ret: (0x%08x) ", func, line, EMAIL_ERROR_OUT_OF_MEMORY,err);
 			return EMAIL_ERROR_OUT_OF_MEMORY;
 			
 		// Tizen email F/W  is often using this error type when it gets a null value from server
 		//It could be caused from server or IPC.
-		case EMAIL_ERROR_NULL_VALUE:
+		case EMAIL_ERROR_NULL_VALUE :
 			LOGE("[%s:%d] NULL_VALUE(0x%08x) : Error from Email F/W. ret: (0x%08x) ", func, line, EMAIL_ERROR_COMMUNICATION_WITH_SERVER_FAILED,err);
 			return EMAIL_ERROR_COMMUNICATION_WITH_SERVER_FAILED;
 
-		case EMAIL_ERROR_IPC_SOCKET_FAILURE:
+		case EMAIL_ERROR_IPC_SOCKET_FAILURE :
 			LOGE("[%s:%d] IPC_SOCKET_FAILURE(0x%08x) : Error from Email F/W. ret: (0x%08x) ", func, line, EMAIL_ERROR_COMMUNICATION_WITH_SERVER_FAILED,err);
 			return EMAIL_ERROR_COMMUNICATION_WITH_SERVER_FAILED;
 
-		case EMAIL_API_ERROR_NONE:
+		case EMAIL_API_ERROR_NONE :
 			return EMAIL_ERROR_NONE;
 
-		default:
+		default :
 			LOGE("[%s:%d] OPERATION_FAILED(0x%08x) : Error from Email F/W. ret: (0x%08x) ", func, line, EMAIL_ERROR_OPERATION_FAILED,err);
 			return EMAIL_ERROR_OPERATION_FAILED;
 

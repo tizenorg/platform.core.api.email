@@ -41,15 +41,15 @@ extern "C"
  */
 typedef enum
 {
-	EMAIL_ERROR_NONE                    = TIZEN_ERROR_NONE,                       /**< Successful */
-	EMAIL_ERROR_OUT_OF_MEMORY           = TIZEN_ERROR_OUT_OF_MEMORY,                  /**< Memory cannot be allocated */
-	EMAIL_ERROR_INVALID_PARAMETER    = TIZEN_ERROR_INVALID_PARAMETER,                 /**< Invalid parameter */
+	EMAIL_ERROR_NONE                              = TIZEN_ERROR_NONE,                   /**< Successful */
+	EMAIL_ERROR_OUT_OF_MEMORY                     = TIZEN_ERROR_OUT_OF_MEMORY,          /**< Memory cannot be allocated */
+	EMAIL_ERROR_INVALID_PARAMETER                 = TIZEN_ERROR_INVALID_PARAMETER,      /**< Invalid parameter */
 
-	EMAIL_ERROR_SERVER_NOT_READY  = TIZEN_ERROR_MESSAGING_CLASS|0x200,                  /**< Server not ready */
+	EMAIL_ERROR_SERVER_NOT_READY                  = TIZEN_ERROR_MESSAGING_CLASS|0x200,  /**< Server not ready */
 	EMAIL_ERROR_COMMUNICATION_WITH_SERVER_FAILED  = TIZEN_ERROR_MESSAGING_CLASS|0x201,  /**< Communication with server failed */
-	EMAIL_ERROR_OPERATION_FAILED = TIZEN_ERROR_MESSAGING_CLASS|0x202,  /**< Operation failed */
-	EMAIL_ERROR_ACCOUNT_NOT_FOUND  	  = TIZEN_ERROR_MESSAGING_CLASS|0x203,  /**< Email account not found */
-	EMAIL_ERROR_DB_FAILED  	  = TIZEN_ERROR_MESSAGING_CLASS|0x204,          /**< Email database failed */
+	EMAIL_ERROR_OPERATION_FAILED                  = TIZEN_ERROR_MESSAGING_CLASS|0x202,  /**< Operation failed */
+	EMAIL_ERROR_ACCOUNT_NOT_FOUND                 = TIZEN_ERROR_MESSAGING_CLASS|0x203,  /**< Email account not found */
+	EMAIL_ERROR_DB_FAILED                         = TIZEN_ERROR_MESSAGING_CLASS|0x204,  /**< Email database failed */
 } email_error_e;
 
 /**
