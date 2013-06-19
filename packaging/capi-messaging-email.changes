@@ -1,0 +1,4 @@
+* Wed Jun 19 2013 Anas Nashif <anas.nashif@intel.com> accepted/tizen/20130520.100653@bdf7e97
+- Fixed build on 64bit
+- Fixed license and package groups
+
