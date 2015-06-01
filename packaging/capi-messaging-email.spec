@@ -1,6 +1,6 @@
 Name:       capi-messaging-email
 Summary:    Email library in Tizen Native API
-Version:    0.1.14
+Version:    0.1.15
 Release:    3
 Group:      Messaging/API
 License:    Apache-2.0
@@ -9,10 +9,11 @@ Source1001: 	capi-messaging-email.manifest
 BuildRequires:  cmake
 BuildRequires:  pkgconfig(dlog)
 BuildRequires:  pkgconfig(glib-2.0)
-BuildRequires:  pkgconfig(edbus)
 BuildRequires:  pkgconfig(email-service)
 BuildRequires:  pkgconfig(capi-base-common)
 BuildRequires:  pkgconfig(capi-appfw-application)
+Requires(post): /sbin/ldconfig  
+Requires(postun): /sbin/ldconfig
 
 %description
 Email library in Tizen Native API.

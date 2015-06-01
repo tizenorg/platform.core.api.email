@@ -35,21 +35,22 @@ extern "C"
  * @brief       Email error definitions.
  */
 
-
 /**
- *  @brief    Enumerations of error codes for email API.
+ *  @brief    Enumeration for error codes for email API.
+ *  @since_tizen 2.3
  */
 typedef enum
 {
-	EMAIL_ERROR_NONE                              = TIZEN_ERROR_NONE,                   /**< Successful */
-	EMAIL_ERROR_OUT_OF_MEMORY                     = TIZEN_ERROR_OUT_OF_MEMORY,          /**< Memory cannot be allocated */
-	EMAIL_ERROR_INVALID_PARAMETER                 = TIZEN_ERROR_INVALID_PARAMETER,      /**< Invalid parameter */
+    EMAILS_ERROR_NONE                              = TIZEN_ERROR_NONE,                   /**< Successful */
+    EMAILS_ERROR_OUT_OF_MEMORY                     = TIZEN_ERROR_OUT_OF_MEMORY,          /**< Memory cannot be allocated */
+    EMAILS_ERROR_INVALID_PARAMETER                 = TIZEN_ERROR_INVALID_PARAMETER,      /**< Invalid parameter */
 
-	EMAIL_ERROR_SERVER_NOT_READY                  = TIZEN_ERROR_MESSAGING_CLASS|0x200,  /**< Server not ready */
-	EMAIL_ERROR_COMMUNICATION_WITH_SERVER_FAILED  = TIZEN_ERROR_MESSAGING_CLASS|0x201,  /**< Communication with server failed */
-	EMAIL_ERROR_OPERATION_FAILED                  = TIZEN_ERROR_MESSAGING_CLASS|0x202,  /**< Operation failed */
-	EMAIL_ERROR_ACCOUNT_NOT_FOUND                 = TIZEN_ERROR_MESSAGING_CLASS|0x203,  /**< Email account not found */
-	EMAIL_ERROR_DB_FAILED                         = TIZEN_ERROR_MESSAGING_CLASS|0x204,  /**< Email database failed */
+    EMAILS_ERROR_SERVER_NOT_READY                  = TIZEN_ERROR_EMAIL_SERVICE|0x200,    /**< Server not ready */
+    EMAILS_ERROR_COMMUNICATION_WITH_SERVER_FAILED  = TIZEN_ERROR_EMAIL_SERVICE|0x201,    /**< Communication with server failed */
+    EMAILS_ERROR_OPERATION_FAILED                  = TIZEN_ERROR_EMAIL_SERVICE|0x202,    /**< Operation failed */
+    EMAILS_ERROR_ACCOUNT_NOT_FOUND                 = TIZEN_ERROR_EMAIL_SERVICE|0x203,    /**< Email account not found */
+    EMAILS_ERROR_DB_FAILED                         = TIZEN_ERROR_EMAIL_SERVICE|0x204,    /**< Email database failed */
+    EMAILS_ERROR_PERMISSION_DENIED                 = TIZEN_ERROR_PERMISSION_DENIED,      /**< Permission denied */
 } email_error_e;
 
 /**
@@ -61,3 +62,4 @@ typedef enum
 #endif
 
 #endif /* __EMAILAPI_ERROR_H__*/
+

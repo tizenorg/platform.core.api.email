@@ -31,35 +31,38 @@ extern "C"
 
 /**
  * @file        email_types.h
- * @ingroup     CAPI_MESSAGING_FRAMEWORK
+ * @ingroup     CAPI_MESSAGING_EMAIL_MODULE
  * @brief       This file defines common types and enums of EMAIL.
  */
 
 
 /**
- * @brief   Email message handle type.
+ * @brief   The email message handle.
+ * @since_tizen 2.3
  */
 typedef struct email_s *email_h;
 
 
 /**
- * @brief	Enumerations for the result values of email transport.
+ * @brief  Enumeration for the result values of email transport.
+ * @since_tizen 2.3
  */
 typedef enum
 {
-  EMAIL_SENDING_FAILED = -1, /**< Email sending failed */
-  EMAIL_SENDING_SUCCEEDED = 0, /**< Email sending succeeded */
+  EMAIL_SENDING_FAILED = -1,    /**< Email sending failed */
+  EMAIL_SENDING_SUCCEEDED = 0,  /**< Email sending succeeded */
 } email_sending_e;
 
 
 /**
- * @brief	Enumerations of the email recipient types.
+ * @brief  Enumeration for the email recipient types.
+ * @since_tizen 2.3
  */
 typedef enum
 {
   EMAIL_RECIPIENT_TYPE_TO = 1, /**< Normal recipient */
-  EMAIL_RECIPIENT_TYPE_CC , /**< CC(carbon copy) recipient */
-  EMAIL_RECIPIENT_TYPE_BCC , /**< BCC(blind carbon copy) recipient */
+  EMAIL_RECIPIENT_TYPE_CC ,    /**< CC(carbon copy) recipient */
+  EMAIL_RECIPIENT_TYPE_BCC ,   /**< BCC(blind carbon copy) recipient */
 } email_recipient_type_e;
 
 
@@ -71,4 +74,5 @@ typedef enum
 #endif
 
 #endif /* __TIZEN_EMAIL_TYPES_H__*/
+
 
