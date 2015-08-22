@@ -20,6 +20,7 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <gio/gio.h>
+#include <app_common.h>
 #include <email-api.h>
 
 #include <email.h>
@@ -43,9 +44,6 @@
 	char* _s = (char*)s;\
 	(_s)? strlen(_s) : 0;\
 })
-
-#define FILE_PATH "/opt/usr/media/.email/capimail.txt"
-#define TMP_PATH "/opt/usr/media/.email"
 
 static guint g_dbus_return_id = 0;
 
@@ -251,40 +249,53 @@ int email_set_body (email_h msg, const char *body)
 		return EMAILS_ERROR_INVALID_PARAMETER;
 	}
 	
+	char *prefix_path = NULL;
+	char *file_path = NULL;
 	email_s* msg_s = (email_s* )msg;	
 	FILE* file = NULL;
 
-	if (!g_file_test(TMP_PATH, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR)) {
-		if (g_mkdir(TMP_PATH, 0775) == -1) {
-			SECURE_SLOGE("[%s] OPERATION_FAILED(0x%08x) : Create directory failed.", __FUNCTION__, EMAILS_ERROR_OPERATION_FAILED);
-			return EMAILS_ERROR_OPERATION_FAILED;
-		}
-
-		if (g_chmod(TMP_PATH, 0775) == -1) {
-			SECURE_SLOGE("[%s] OPERATION_FAILED(0x%08x) : Change permission failed.", __FUNCTION__, EMAILS_ERROR_OPERATION_FAILED);
-			return EMAILS_ERROR_OPERATION_FAILED;
-		}
+	prefix_path = app_get_data_path();
+	if (prefix_path) {
+		LOGD("Prefix_path : [%s]", prefix_path);
+		file_path = g_strconcat(prefix_path, "/", "utf-8", NULL);
+		free(prefix_path);
+	} else {
+		SECURE_SLOGE("[%s] OPERATION_FAILED(0x%08x) : fail to get data path.", 
+					__FUNCTION__, EMAILS_ERROR_OPERATION_FAILED);
+		return EMAILS_ERROR_OPERATION_FAILED;
 	}
 
-	file = fopen(FILE_PATH, "w");
+	if (file_path == NULL) {
+		SECURE_SLOGE("[%s] OUT_OF_MEMORY(0x%08x) : fail to allocate file_path.", 
+					__FUNCTION__, EMAILS_ERROR_OUT_OF_MEMORY);
+		return EMAILS_ERROR_OUT_OF_MEMORY;
+	}
+
+	file = fopen(file_path, "w");
 	if (file != NULL) {
 		 fputs(body, file);
 		 fclose(file);
 	} else {
-		SECURE_SLOGE("[%s] OPERATION_FAILED(0x%08x) : opening file for email body failed.", __FUNCTION__, EMAILS_ERROR_OPERATION_FAILED);
+		free(file_path);
+		SECURE_SLOGE("[%s] OPERATION_FAILED(0x%08x) : opening file for email body failed.", 
+					__FUNCTION__, EMAILS_ERROR_OPERATION_FAILED);
 		return EMAILS_ERROR_OPERATION_FAILED;
 	}
 
-	len = strlen(FILE_PATH) + 1;
+	len = strlen(file_path) + 1;
 
 	msg_s->mail->file_path_plain = (char *)calloc(1, sizeof(char) * len);
 	if (msg_s->mail->file_path_plain == NULL) {
-		SECURE_SLOGE("[%s] OUT_OF_MEMORY(0x%08x) : fail to allocate body(plain).", __FUNCTION__, EMAILS_ERROR_OUT_OF_MEMORY);
+		free(file_path);
+		SECURE_SLOGE("[%s] OUT_OF_MEMORY(0x%08x) : fail to allocate body(plain).", 
+					__FUNCTION__, EMAILS_ERROR_OUT_OF_MEMORY);
 		return EMAILS_ERROR_OUT_OF_MEMORY;
 	}
 	
-	snprintf(msg_s->mail->file_path_plain, len, "%s", FILE_PATH);
+	snprintf(msg_s->mail->file_path_plain, len, "%s", file_path);
 	
+	free(file_path);
+
 	LOGD("END\n");
 	return EMAILS_ERROR_NONE;
 }
@@ -304,7 +315,8 @@ int email_add_recipient (email_h msg, email_recipient_type_e type, const char *a
 	
 	if(strlen(address) > MAX_RECIPIENT_ADDRESS_LEN)
 	{
-		SECURE_SLOGE("[%s] INVALID_PARAMETER(0x%08x) : The length of address should be less than 234.", __FUNCTION__, EMAILS_ERROR_INVALID_PARAMETER);
+		SECURE_SLOGE("[%s] INVALID_PARAMETER(0x%08x) : The length of address should be less than 234.", 
+					__FUNCTION__, EMAILS_ERROR_INVALID_PARAMETER);
 		return EMAILS_ERROR_INVALID_PARAMETER;
 	}
 
@@ -315,7 +327,8 @@ int email_add_recipient (email_h msg, email_recipient_type_e type, const char *a
 			msg_s->mail->full_address_to = (char*)calloc(1,sizeof(char)*strlen(address)+2+1+1);//<>+;+end of string
 			if(msg_s->mail->full_address_to == NULL)
 			{
-				SECURE_SLOGE("[%s] OUT_OF_MEMORY(0x%08x) : fail to create head->to.", __FUNCTION__, EMAILS_ERROR_OUT_OF_MEMORY);
+				SECURE_SLOGE("[%s] OUT_OF_MEMORY(0x%08x) : fail to create head->to.", 
+							__FUNCTION__, EMAILS_ERROR_OUT_OF_MEMORY);
 			 	return EMAILS_ERROR_OUT_OF_MEMORY;
 			}
 			len =strlen(address)+2+1+1;
@@ -340,7 +353,8 @@ int email_add_recipient (email_h msg, email_recipient_type_e type, const char *a
 			msg_s->mail->full_address_cc = (char*)calloc(1,sizeof(char)*strlen(address)+2+1+1);//<>+;+end of string
 			if(msg_s->mail->full_address_cc == NULL)
 			{
-				SECURE_SLOGE("[%s] OUT_OF_MEMORY(0x%08x) : fail to create head->cc.", __FUNCTION__, EMAILS_ERROR_OUT_OF_MEMORY);
+				SECURE_SLOGE("[%s] OUT_OF_MEMORY(0x%08x) : fail to create head->cc.", 
+							__FUNCTION__, EMAILS_ERROR_OUT_OF_MEMORY);
 				return EMAILS_ERROR_OUT_OF_MEMORY;
 			}
 			len =strlen(address)+2+1+1;
@@ -366,7 +380,8 @@ int email_add_recipient (email_h msg, email_recipient_type_e type, const char *a
 			msg_s->mail->full_address_bcc = (char*)calloc(1,sizeof(char)*strlen(address)+2+1+1);//<>+;+end of string
 			if(msg_s->mail->full_address_bcc==NULL)
 			{
-				SECURE_SLOGE("[%s] OUT_OF_MEMORY(0x%08x) : fail to create head->bcc.", __FUNCTION__, EMAILS_ERROR_OUT_OF_MEMORY);
+				SECURE_SLOGE("[%s] OUT_OF_MEMORY(0x%08x) : fail to create head->bcc.", 
+							__FUNCTION__, EMAILS_ERROR_OUT_OF_MEMORY);
 				return EMAILS_ERROR_OUT_OF_MEMORY;
 			}
 			len =strlen(address)+2+1+1;
@@ -394,7 +409,8 @@ int email_remove_all_recipients(email_h msg)
 	LOGD("START\n");
 	if(msg ==NULL)
 	{
-		SECURE_SLOGE("[%s] INVALID_PARAMETER(0x%08x) : fail to create tmp memory.", __FUNCTION__, EMAILS_ERROR_INVALID_PARAMETER);
+		SECURE_SLOGE("[%s] INVALID_PARAMETER(0x%08x) : fail to create tmp memory.", 
+					__FUNCTION__, EMAILS_ERROR_INVALID_PARAMETER);
 		return EMAILS_ERROR_INVALID_PARAMETER;
 	}
 	
@@ -431,7 +447,8 @@ int email_add_attach (email_h msg, const char *filepath)
 
 	if(msg ==NULL || filepath == NULL)
 	{
-		SECURE_SLOGE("[%s] INVALID_PARAMETER(0x%08x) : msg or filepath is null.", __FUNCTION__, EMAILS_ERROR_INVALID_PARAMETER);
+		SECURE_SLOGE("[%s] INVALID_PARAMETER(0x%08x) : msg or filepath is null.", 
+					__FUNCTION__, EMAILS_ERROR_INVALID_PARAMETER);
 		return EMAILS_ERROR_INVALID_PARAMETER;
 	}
 
@@ -443,13 +460,15 @@ int email_add_attach (email_h msg, const char *filepath)
 	stat(filepath, &st);
 	if(st.st_size > 10*1024*1024)
 	{
-		SECURE_SLOGE("[%s] INVALID_PARAMETER(0x%08x) : the size of attachment file is beyond the limit(MAX:10M).", __FUNCTION__, EMAILS_ERROR_INVALID_PARAMETER);
+		SECURE_SLOGE("[%s] INVALID_PARAMETER(0x%08x) : the size of attachment file is beyond the limit(MAX:10M).", 
+					__FUNCTION__, EMAILS_ERROR_INVALID_PARAMETER);
 		return EMAILS_ERROR_INVALID_PARAMETER;
 	}
 
 	if (!S_ISREG(st.st_mode))
 	{
-		SECURE_SLOGE("[%s] INVALID_PARAMETER(0x%08x) : the filepath is not regular file.", __FUNCTION__, EMAILS_ERROR_INVALID_PARAMETER);
+		SECURE_SLOGE("[%s] INVALID_PARAMETER(0x%08x) : the filepath is not regular file.", 
+					__FUNCTION__, EMAILS_ERROR_INVALID_PARAMETER);
 		return EMAILS_ERROR_INVALID_PARAMETER;
 	}
 		
@@ -748,40 +767,48 @@ int _email_error_converter(int err, const char *func, int line)
 	switch(err) 
 	{
 		case EMAIL_ERROR_INVALID_PARAM :
-			SECURE_SLOGE("[%s:%d] INVALID_PARAM(0x%08x) : Error from Email F/W. ret: (0x%08x) ", func, line, EMAILS_ERROR_INVALID_PARAMETER, err);
+			SECURE_SLOGE("[%s:%d] INVALID_PARAM(0x%08x) : Error from Email F/W. ret: (0x%08x) ", 
+						func, line, EMAILS_ERROR_INVALID_PARAMETER, err);
 			return EMAILS_ERROR_INVALID_PARAMETER;
 
 		case EMAIL_ERROR_DB_FAILURE :
-			SECURE_SLOGE("[%s:%d] DB_FAILURE(0x%08x) : Error from Email F/W. ret: (0x%08x) ", func, line, EMAILS_ERROR_DB_FAILED, err);
+			SECURE_SLOGE("[%s:%d] DB_FAILURE(0x%08x) : Error from Email F/W. ret: (0x%08x) ", 
+						func, line, EMAILS_ERROR_DB_FAILED, err);
 			return EMAILS_ERROR_DB_FAILED;
 
 		case EMAIL_ERROR_ACCOUNT_NOT_FOUND :
-			SECURE_SLOGE("[%s:%d] ACCOUNT_NOT_FOUND(0x%08x) : Error from Email F/W. ret: (0x%08x) ", func, line, EMAILS_ERROR_ACCOUNT_NOT_FOUND,err);
+			SECURE_SLOGE("[%s:%d] ACCOUNT_NOT_FOUND(0x%08x) : Error from Email F/W. ret: (0x%08x) ", 
+						func, line, EMAILS_ERROR_ACCOUNT_NOT_FOUND,err);
 			return EMAILS_ERROR_ACCOUNT_NOT_FOUND;
 
 		case EMAIL_ERROR_OUT_OF_MEMORY :
-			SECURE_SLOGE("[%s:%d] OUT_OF_MEMORY(0x%08x) : Error from Email F/W. ret: (0x%08x) ", func, line, EMAILS_ERROR_OUT_OF_MEMORY,err);
+			SECURE_SLOGE("[%s:%d] OUT_OF_MEMORY(0x%08x) : Error from Email F/W. ret: (0x%08x) ", 
+						func, line, EMAILS_ERROR_OUT_OF_MEMORY,err);
 			return EMAILS_ERROR_OUT_OF_MEMORY;
 			
 		// Tizen email F/W  is often using this error type when it gets a null value from server
 		//It could be caused from server or IPC.
 		case EMAIL_ERROR_NULL_VALUE :
-			SECURE_SLOGE("[%s:%d] NULL_VALUE(0x%08x) : Error from Email F/W. ret: (0x%08x) ", func, line, EMAILS_ERROR_COMMUNICATION_WITH_SERVER_FAILED,err);
+			SECURE_SLOGE("[%s:%d] NULL_VALUE(0x%08x) : Error from Email F/W. ret: (0x%08x) ", 
+						func, line, EMAILS_ERROR_COMMUNICATION_WITH_SERVER_FAILED,err);
 			return EMAILS_ERROR_COMMUNICATION_WITH_SERVER_FAILED;
 
 		case EMAIL_ERROR_IPC_SOCKET_FAILURE :
-			SECURE_SLOGE("[%s:%d] IPC_SOCKET_FAILURE(0x%08x) : Error from Email F/W. ret: (0x%08x) ", func, line, EMAILS_ERROR_COMMUNICATION_WITH_SERVER_FAILED,err);
+			SECURE_SLOGE("[%s:%d] IPC_SOCKET_FAILURE(0x%08x) : Error from Email F/W. ret: (0x%08x) ", 
+						func, line, EMAILS_ERROR_COMMUNICATION_WITH_SERVER_FAILED,err);
 			return EMAILS_ERROR_COMMUNICATION_WITH_SERVER_FAILED;
 
 		case EMAIL_ERROR_PERMISSION_DENIED :
-			SECURE_SLOGE("[%s:%d] PERMISSION_DENIED(0x%08x) : Error from Email F/W. ret: (0x%08x) ", func, line, EMAILS_ERROR_PERMISSION_DENIED,err);
+			SECURE_SLOGE("[%s:%d] PERMISSION_DENIED(0x%08x) : Error from Email F/W. ret: (0x%08x) ", 
+						func, line, EMAILS_ERROR_PERMISSION_DENIED,err);
 			return EMAILS_ERROR_PERMISSION_DENIED;
 
 		case EMAIL_ERROR_NONE :
 			return EMAILS_ERROR_NONE;
 
 		default :
-			SECURE_SLOGE("[%s:%d] OPERATION_FAILED(0x%08x) : Error from Email F/W. ret: (0x%08x) ", func, line, EMAILS_ERROR_OPERATION_FAILED,err);
+			SECURE_SLOGE("[%s:%d] OPERATION_FAILED(0x%08x) : Error from Email F/W. ret: (0x%08x) ", 
+						func, line, EMAILS_ERROR_OPERATION_FAILED,err);
 			return EMAILS_ERROR_OPERATION_FAILED;
 
 	}

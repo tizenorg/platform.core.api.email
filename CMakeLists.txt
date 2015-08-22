@@ -10,7 +10,7 @@ SET(PREFIX ${CMAKE_INSTALL_PREFIX})
 SET(INC_DIR include)
 INCLUDE_DIRECTORIES(${INC_DIR})
 
-SET(dependents "dlog glib-2.0 capi-base-common email-service")
+SET(dependents "dlog glib-2.0 capi-base-common email-service capi-appfw-app-common")
 
 INCLUDE(FindPkgConfig)
 pkg_check_modules(${fw_name} REQUIRED ${dependents})
