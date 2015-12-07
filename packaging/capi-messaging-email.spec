@@ -6,6 +6,15 @@ Group:      Messaging/API
 License:    Apache-2.0
 Source0:    %{name}-%{version}.tar.gz
 Source1001: 	capi-messaging-email.manifest
+
+%if "%{?tizen_profile_name}" == "wearable"	
+ExcludeArch: %{arm} %ix86 x86_64	
+%endif
+
+%if "%{?tizen_profile_name}" == "tv"
+ExcludeArch: %{arm} %ix86 x86_64
+%endif
+
 BuildRequires:  cmake
 BuildRequires:  pkgconfig(dlog)
 BuildRequires:  pkgconfig(glib-2.0)
