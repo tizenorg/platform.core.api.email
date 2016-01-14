@@ -11,7 +11,7 @@
  * distributed under the License is distributed on an AS IS BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License. 
+ * limitations under the License.
  */
 
  #ifndef __MESSAGING_EMAIL_H__
@@ -82,6 +82,9 @@ int email_destroy_message(email_h email);
  * @brief   Sets a subject of the email message.
  * @since_tizen 2.3
  *
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/email
+
  * @param[in]   email    The handle to the email message
  * @param[in]   subject  The subject of the email message
  *
@@ -104,6 +107,9 @@ int email_set_subject(email_h email, const char *subject);
  *
  * @since_tizen 2.3
  *
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/mediastorage
+ *
  * @param[in]   email   The handle to the email message
  * @param[in]   body    The message body
  *
@@ -122,7 +128,7 @@ int email_set_body(email_h email, const char *body);
 
 /**
  * @brief   Adds a recipient to the email message.
- * @details The email API supports sending an email message to multiple recipients. 
+ * @details The email API supports sending an email message to multiple recipients.
  *
  * @since_tizen 2.3
  *
@@ -242,8 +248,6 @@ int email_save_message(email_h email);
  * @brief   Sends the email message.
  * @since_tizen 2.3
  *
- * @privlevel public
- * @privilege %http://tizen.org/privilege/email
  *
  * @remarks In order to check whether sending a message succeeds,
  *          you should register email_message_sent_cb() using email_set_message_sent_cb().
@@ -287,8 +291,8 @@ int email_send_message(email_h email, bool save_to_sentbox);
 typedef void (* email_message_sent_cb)(email_h email, email_sending_e result, void *user_data);
 
 /**
- * @brief   Registers a callback function to be invoked when an email message is sent. 
- * @details You will be notified when sending a message finishes and check whether it succeeds using this function. 
+ * @brief   Registers a callback function to be invoked when an email message is sent.
+ * @details You will be notified when sending a message finishes and check whether it succeeds using this function.
  *
  * @since_tizen 2.3
  *
