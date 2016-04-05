@@ -11,7 +11,7 @@
  * distributed under the License is distributed on an AS IS BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License. 
+ * limitations under the License.
  */
 
 
@@ -47,10 +47,9 @@ typedef struct email_s *email_h;
  * @brief  Enumeration for the result values of email transport.
  * @since_tizen 2.3
  */
-typedef enum
-{
-  EMAIL_SENDING_FAILED = -1,    /**< Email sending failed */
-  EMAIL_SENDING_SUCCEEDED = 0,  /**< Email sending succeeded */
+typedef enum {
+	EMAIL_SENDING_FAILED = -1,    /**< Email sending failed */
+	EMAIL_SENDING_SUCCEEDED = 0,  /**< Email sending succeeded */
 } email_sending_e;
 
 
@@ -58,11 +57,10 @@ typedef enum
  * @brief  Enumeration for the email recipient types.
  * @since_tizen 2.3
  */
-typedef enum
-{
-  EMAIL_RECIPIENT_TYPE_TO = 1, /**< Normal recipient */
-  EMAIL_RECIPIENT_TYPE_CC ,    /**< CC(carbon copy) recipient */
-  EMAIL_RECIPIENT_TYPE_BCC ,   /**< BCC(blind carbon copy) recipient */
+typedef enum {
+	EMAIL_RECIPIENT_TYPE_TO = 1, /**< Normal recipient */
+	EMAIL_RECIPIENT_TYPE_CC ,    /**< CC(carbon copy) recipient */
+	EMAIL_RECIPIENT_TYPE_BCC ,   /**< BCC(blind carbon copy) recipient */
 } email_recipient_type_e;
 
 

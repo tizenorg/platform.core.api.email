@@ -11,7 +11,7 @@
  * distributed under the License is distributed on an AS IS BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License. 
+ * limitations under the License.
  */
 
 
@@ -31,13 +31,13 @@
  *
  * @section CAPI_MESSAGING_EMAIL_MODULE_OVERVIEW Overview
  *
- * The @ref CAPI_MESSAGING_EMAIL_MODULE API provides functions that prepare and send email messages. 
- * This API allows email message creation, setting message properties 
+ * The @ref CAPI_MESSAGING_EMAIL_MODULE API provides functions that prepare and send email messages.
+ * This API allows email message creation, setting message properties
  * and sending as well setting up to be notified when the email message has been sent.
  *
  *
  * Email, short for electronic mail, is a method of exchanging digital messages.
- * This API allows you to send email using SMTP. 
+ * This API allows you to send email using SMTP.
  * Simple Mail Transfer Protocol (SMTP) used for sending email via Internet is described in RFC5321/5322 standards.
  *
  * The Email API consists of functions that:
@@ -47,10 +47,10 @@
  * - Register/unregister a callback function to be called when the sending process is complete,
  *     whether it is sent successfully or not
  *
- * Email sending is asynchronous and the application should not wait for the result.  
- * Not only may the process be slow (connections to be established and so on), 
+ * Email sending is asynchronous and the application should not wait for the result.
+ * Not only may the process be slow (connections to be established and so on),
  * but even if the mail server is not available a message send may not be a failure, if there is a spooling mechanism.
- * Instead, the callback function is used to receive status. In addition, note that once email_send_message() is called, 
+ * Instead, the callback function is used to receive status. In addition, note that once email_send_message() is called,
  * the message contents are out of the application's hands.
  * Even if the message appears not to have finished sending, it can no longer be modified.
  *

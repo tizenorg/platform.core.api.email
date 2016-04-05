@@ -56,7 +56,7 @@ typedef struct {
 GSList *gEmailcbList = NULL;
 
 GDBusConnection* connection = NULL;
-//------------- Utility Or Miscellaneous
+/* Utility Or Miscellaneous */
 void _email_add_dbus_filter(void);
 void _email_remove_dbus_filter(void);
 int _email_error_converter(int err, const char *func, int line);
@@ -65,7 +65,7 @@ void _email_free_cb_context(email_cb_context *cbcontext);
 
 #define CONVERT_ERROR(err) _email_error_converter(err, __FUNCTION__, __LINE__);
 
-//------------------------------------
+
 
 int email_create_message(email_h *msg)
 {
@@ -80,7 +80,7 @@ int email_create_message(email_h *msg)
 		return EMAILS_ERROR_INVALID_PARAMETER;
 	}
 
-	// 1. create service for ipc
+	/* 1. create service for ipc */
 	ret = email_service_begin();
 	if (ret != EMAIL_ERROR_NONE && ret != EMAIL_ERROR_IPC_ALREADY_INITIALIZED) {
 		SECURE_SLOGE("[%s] email_service_begin failed : [%d]", __FUNCTION__, ret);
@@ -109,8 +109,8 @@ int email_create_message(email_h *msg)
 	}
 
 
-	//return error from F/W
-	//EMAILS_ERROR_INVALID_PARAM/EMAIL_ERROR_NONE/EMAILS_ERROR_DB_FAILURE/EMAILS_ERROR_ACCOUNT_NOT_FOUND/EMAILS_ERROR_OUT_OF_MEMORY
+	/* return error from F/W */
+	/* EMAILS_ERROR_INVALID_PARAM/EMAIL_ERROR_NONE/EMAILS_ERROR_DB_FAILURE/EMAILS_ERROR_ACCOUNT_NOT_FOUND/EMAILS_ERROR_OUT_OF_MEMORY */
 	int default_account_id = 0;
 	if ((ret = email_load_default_account_id(&default_account_id)) != EMAIL_ERROR_NONE) {
 		SECURE_SLOGE("[%s] email_load_default_account_id failed : [%d]", __FUNCTION__, ret);
@@ -123,9 +123,9 @@ int email_create_message(email_h *msg)
 	ret = email_get_account(default_account_id, GET_FULL_DATA_WITHOUT_PASSWORD, &account);
 	if (ret != EMAIL_ERROR_NONE) {
 		SECURE_SLOGE("[%s] email_get_account failed : [%d]", __FUNCTION__, ret);
-		if (account) {
+		if (account)
 			email_free_account(&account, 1);
-		}
+
 		email_free_mail_data(&msg_s->mail, 1);
 		email_free_mailbox(&msg_s->mbox, 1);
 		free(msg_s);
@@ -138,7 +138,7 @@ int email_create_message(email_h *msg)
 	SECURE_LOGD("account user_name = %s", account->incoming_server_user_name);
 
 	len = EM_SAFE_STRLEN(account->incoming_server_user_name) + EM_SAFE_STRLEN(account->user_email_address) + 1 + 1 + 1 + 1 + 1;
-	msg_s->mail->full_address_from = (char *)calloc(1, sizeof(char) * (len));//"++"+<+ address +> + NULL
+	msg_s->mail->full_address_from = (char *)calloc(1, sizeof(char) * (len));/* "++"+<+ address +> + NULL */
 	char *strfrom = msg_s->mail->full_address_from;
 
 	if (account->incoming_server_user_name)
@@ -146,7 +146,7 @@ int email_create_message(email_h *msg)
 	else
 		snprintf(strfrom, len, "%s%s%s", "<", account->user_email_address, ">");
 
-	//mbox
+	/* mbox */
 	email_mailbox_t *mbox = msg_s->mbox;
 
 	if ((ret = email_get_mailbox_by_mailbox_type(default_account_id, EMAIL_MAILBOX_TYPE_OUTBOX, &mbox)) != EMAIL_ERROR_NONE) {
@@ -157,7 +157,7 @@ int email_create_message(email_h *msg)
 		return CONVERT_ERROR(ret);
 	}
 
-	//info
+	/* info */
 	msg_s->mail->account_id = account->account_id;
 	msg_s->mail->flags_draft_field = 1;
 	msg_s->mail->flags_seen_field = 1;
@@ -298,9 +298,9 @@ int email_add_recipient(email_h msg, email_recipient_type_e type, const char *ad
 	char *tmp;
 	int total_len, in_len, pre_len, len;
 
-	if (msg == NULL || type < EMAIL_RECIPIENT_TYPE_TO || type > EMAIL_RECIPIENT_TYPE_BCC) {
+	if (msg == NULL || type < EMAIL_RECIPIENT_TYPE_TO || type > EMAIL_RECIPIENT_TYPE_BCC)
 		return EMAILS_ERROR_INVALID_PARAMETER;
-	}
+
 
 	email_s* msg_s = (email_s*)msg;
 
@@ -312,20 +312,20 @@ int email_add_recipient(email_h msg, email_recipient_type_e type, const char *ad
 
 	if (type == EMAIL_RECIPIENT_TYPE_TO) {
 		if (msg_s->mail->full_address_to == NULL) {
-			msg_s->mail->full_address_to = (char *)calloc(1, sizeof(char) * strlen(address) + 2 + 1 + 1);//<>+;+end of string
+			msg_s->mail->full_address_to = (char *)calloc(1, sizeof(char) * strlen(address) + 2 + 1 + 1);/* <>+;+end of string */
 			if (msg_s->mail->full_address_to == NULL) {
 				SECURE_SLOGE("[%s] OUT_OF_MEMORY(0x%08x) : fail to create head->to.",
 							__FUNCTION__, EMAILS_ERROR_OUT_OF_MEMORY);
-			 	return EMAILS_ERROR_OUT_OF_MEMORY;
+				return EMAILS_ERROR_OUT_OF_MEMORY;
 			}
 			len = strlen(address) + 2 + 1 + 1;
 			snprintf(msg_s->mail->full_address_to, len, "%s%s%s", "<", address, ">");
 		} else {
 			in_len = strlen(address);
 			pre_len = strlen(msg_s->mail->full_address_to);
-			total_len = pre_len + in_len + 3 + 1;// length of ",<>" + NULL
+			total_len = pre_len + in_len + 3 + 1;/* length of ",<>" + NULL */
 
-			//add new address
+			/* add new address */
 			tmp = msg_s->mail->full_address_to;
 			msg_s->mail->full_address_to = (char *)calloc(1, sizeof(char) * total_len);
 			snprintf(msg_s->mail->full_address_to, total_len, "%s%s%s%s", tmp, ",<", address, ">");
@@ -333,9 +333,9 @@ int email_add_recipient(email_h msg, email_recipient_type_e type, const char *ad
 		}
 
 	} else if (type == EMAIL_RECIPIENT_TYPE_CC) {
-		//MESSAGING_RECIPIENT_TYPE_CC
+		/* MESSAGING_RECIPIENT_TYPE_CC */
 		if (msg_s->mail->full_address_cc == NULL) {
-			msg_s->mail->full_address_cc = (char *)calloc(1, sizeof(char) * strlen(address) + 2 + 1 + 1);//<>+;+end of string
+			msg_s->mail->full_address_cc = (char *)calloc(1, sizeof(char) * strlen(address) + 2 + 1 + 1);/* <>+;+end of string */
 			if (msg_s->mail->full_address_cc == NULL) {
 				SECURE_SLOGE("[%s] OUT_OF_MEMORY(0x%08x) : fail to create head->cc.",
 							__FUNCTION__, EMAILS_ERROR_OUT_OF_MEMORY);
@@ -346,18 +346,18 @@ int email_add_recipient(email_h msg, email_recipient_type_e type, const char *ad
 		} else {
 			in_len = strlen(address);
 			pre_len = strlen(msg_s->mail->full_address_cc);
-			total_len = pre_len + in_len + 3 + 1;// length of ",<>" + NULL
+			total_len = pre_len + in_len + 3 + 1;/* length of ",<>" + NULL */
 
-			//add new address
+			/* add new address */
 			tmp = msg_s->mail->full_address_cc;
 			msg_s->mail->full_address_cc = (char *)calloc(1, sizeof(char) * total_len);
 			snprintf(msg_s->mail->full_address_cc, total_len, "%s%s%s%s", tmp, ",<", address, ">");
 			free(tmp);
 		}
 
-	} else {//MESSAGING_RECIPIENT_TYPE_BCC
+	} else {/* MESSAGING_RECIPIENT_TYPE_BCC */
 		if (msg_s->mail->full_address_bcc == NULL) {
-			msg_s->mail->full_address_bcc = (char *)calloc(1, sizeof(char) * strlen(address) + 2 + 1 + 1);//<>+;+end of string
+			msg_s->mail->full_address_bcc = (char *)calloc(1, sizeof(char) * strlen(address) + 2 + 1 + 1);/* <>+;+end of string */
 			if (msg_s->mail->full_address_bcc == NULL) {
 				SECURE_SLOGE("[%s] OUT_OF_MEMORY(0x%08x) : fail to create head->bcc.",
 							__FUNCTION__, EMAILS_ERROR_OUT_OF_MEMORY);
@@ -368,9 +368,9 @@ int email_add_recipient(email_h msg, email_recipient_type_e type, const char *ad
 		} else {
 			in_len = strlen(address);
 			pre_len = strlen(msg_s->mail->full_address_bcc);
-			total_len = pre_len+in_len + 3 + 1;// length of ",<>" + NULL
+			total_len = pre_len+in_len + 3 + 1;/* length of ",<>" + NULL */
 
-			//add new address
+			/* add new address */
 			tmp = msg_s->mail->full_address_bcc;
 			msg_s->mail->full_address_bcc = (char *)calloc(1, sizeof(char) * total_len);
 			snprintf(msg_s->mail->full_address_bcc, total_len, "%s%s%s%s", tmp, ",<", address, ">");
@@ -545,9 +545,9 @@ email_cb_context *_email_search_callback_by_emailid(int mailid)
 			break;
 
 		cbContext = (email_cb_context *)node->data;
-		if (cbContext->handle->mail->mail_id == mailid) {
+		if (cbContext->handle->mail->mail_id == mailid)
 			return cbContext;
-		}
+
 
 		ntmp++;
 		count--;
@@ -667,47 +667,47 @@ int _email_error_converter(int err, const char *func, int line)
 {
 	LOGD("START\n");
 	switch (err) {
-		case EMAIL_ERROR_INVALID_PARAM:
+	case EMAIL_ERROR_INVALID_PARAM:
 			SECURE_SLOGE("[%s:%d] INVALID_PARAM(0x%08x) : Error from Email F/W. ret: (0x%08x) ",
 						func, line, EMAILS_ERROR_INVALID_PARAMETER, err);
 			return EMAILS_ERROR_INVALID_PARAMETER;
 
-		case EMAIL_ERROR_DB_FAILURE:
+	case EMAIL_ERROR_DB_FAILURE:
 			SECURE_SLOGE("[%s:%d] DB_FAILURE(0x%08x) : Error from Email F/W. ret: (0x%08x) ",
 						func, line, EMAILS_ERROR_DB_FAILED, err);
 			return EMAILS_ERROR_DB_FAILED;
 
-		case EMAIL_ERROR_ACCOUNT_NOT_FOUND:
+	case EMAIL_ERROR_ACCOUNT_NOT_FOUND:
 			SECURE_SLOGE("[%s:%d] ACCOUNT_NOT_FOUND(0x%08x) : Error from Email F/W. ret: (0x%08x) ",
 						func, line, EMAILS_ERROR_ACCOUNT_NOT_FOUND, err);
 			return EMAILS_ERROR_ACCOUNT_NOT_FOUND;
 
-		case EMAIL_ERROR_OUT_OF_MEMORY:
+	case EMAIL_ERROR_OUT_OF_MEMORY:
 			SECURE_SLOGE("[%s:%d] OUT_OF_MEMORY(0x%08x) : Error from Email F/W. ret: (0x%08x) ",
 						func, line, EMAILS_ERROR_OUT_OF_MEMORY, err);
 			return EMAILS_ERROR_OUT_OF_MEMORY;
 
-		// Tizen email F/W  is often using this error type when it gets a null value from server
-		//It could be caused from server or IPC.
-		case EMAIL_ERROR_NULL_VALUE:
+		/* Tizen email F/W  is often using this error type when it gets a null value from server */
+		/* It could be caused from server or IPC. */
+	case EMAIL_ERROR_NULL_VALUE:
 			SECURE_SLOGE("[%s:%d] NULL_VALUE(0x%08x) : Error from Email F/W. ret: (0x%08x) ",
 						func, line, EMAILS_ERROR_COMMUNICATION_WITH_SERVER_FAILED, err);
 			return EMAILS_ERROR_COMMUNICATION_WITH_SERVER_FAILED;
 
-		case EMAIL_ERROR_IPC_SOCKET_FAILURE:
+	case EMAIL_ERROR_IPC_SOCKET_FAILURE:
 			SECURE_SLOGE("[%s:%d] IPC_SOCKET_FAILURE(0x%08x) : Error from Email F/W. ret: (0x%08x) ",
 						func, line, EMAILS_ERROR_COMMUNICATION_WITH_SERVER_FAILED, err);
 			return EMAILS_ERROR_COMMUNICATION_WITH_SERVER_FAILED;
 
-		case EMAIL_ERROR_PERMISSION_DENIED:
+	case EMAIL_ERROR_PERMISSION_DENIED:
 			SECURE_SLOGE("[%s:%d] PERMISSION_DENIED(0x%08x) : Error from Email F/W. ret: (0x%08x) ",
 						func, line, EMAILS_ERROR_PERMISSION_DENIED, err);
 			return EMAILS_ERROR_PERMISSION_DENIED;
 
-		case EMAIL_ERROR_NONE:
+	case EMAIL_ERROR_NONE:
 			return EMAILS_ERROR_NONE;
 
-		default:
+	default:
 			SECURE_SLOGE("[%s:%d] OPERATION_FAILED(0x%08x) : Error from Email F/W. ret: (0x%08x) ",
 						func, line, EMAILS_ERROR_OPERATION_FAILED, err);
 			return EMAILS_ERROR_OPERATION_FAILED;
@@ -821,9 +821,9 @@ void _email_add_dbus_filter(void)
 													_monitorSendStatusCb,
 													NULL,
 													NULL);
-	if (g_dbus_return_id == -1) {
+	if (g_dbus_return_id == -1)
 		LOGE("g_dbus_connection_signal_subscribe failed");
-	}
+
 
 	LOGE("END\n");
 }

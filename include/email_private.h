@@ -11,7 +11,7 @@
  * distributed under the License is distributed on an AS IS BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License. 
+ * limitations under the License.
  */
 
 
@@ -26,7 +26,7 @@ extern "C"
 
 #define MAX_ATTACHEMENT_COUNT           50
 
-#define MAX_RECIPIENT_ADDRESS_LEN 	234
+#define MAX_RECIPIENT_ADDRESS_LEN	234
 
 typedef struct _email_s {
 	email_mailbox_t *mbox;

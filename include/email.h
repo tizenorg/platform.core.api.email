@@ -288,7 +288,7 @@ int email_send_message(email_h email, bool save_to_sentbox);
  * @see email_set_message_sent_cb()
  * @see email_unset_message_sent_cb()
  */
-typedef void (* email_message_sent_cb)(email_h email, email_sending_e result, void *user_data);
+typedef void (*email_message_sent_cb)(email_h email, email_sending_e result, void *user_data);
 
 /**
  * @brief   Registers a callback function to be invoked when an email message is sent.

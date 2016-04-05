@@ -11,7 +11,7 @@
  * distributed under the License is distributed on an AS IS BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License. 
+ * limitations under the License.
  */
 
 
@@ -39,18 +39,17 @@ extern "C"
  *  @brief    Enumeration for error codes for email API.
  *  @since_tizen 2.3
  */
-typedef enum
-{
-    EMAILS_ERROR_NONE                              = TIZEN_ERROR_NONE,                   /**< Successful */
-    EMAILS_ERROR_OUT_OF_MEMORY                     = TIZEN_ERROR_OUT_OF_MEMORY,          /**< Memory cannot be allocated */
-    EMAILS_ERROR_INVALID_PARAMETER                 = TIZEN_ERROR_INVALID_PARAMETER,      /**< Invalid parameter */
+typedef enum {
+	EMAILS_ERROR_NONE                              = TIZEN_ERROR_NONE,                   /**< Successful */
+	EMAILS_ERROR_OUT_OF_MEMORY                     = TIZEN_ERROR_OUT_OF_MEMORY,          /**< Memory cannot be allocated */
+	EMAILS_ERROR_INVALID_PARAMETER                 = TIZEN_ERROR_INVALID_PARAMETER,      /**< Invalid parameter */
 
-    EMAILS_ERROR_SERVER_NOT_READY                  = TIZEN_ERROR_EMAIL_SERVICE|0x200,    /**< Server not ready */
-    EMAILS_ERROR_COMMUNICATION_WITH_SERVER_FAILED  = TIZEN_ERROR_EMAIL_SERVICE|0x201,    /**< Communication with server failed */
-    EMAILS_ERROR_OPERATION_FAILED                  = TIZEN_ERROR_EMAIL_SERVICE|0x202,    /**< Operation failed */
-    EMAILS_ERROR_ACCOUNT_NOT_FOUND                 = TIZEN_ERROR_EMAIL_SERVICE|0x203,    /**< Email account not found */
-    EMAILS_ERROR_DB_FAILED                         = TIZEN_ERROR_EMAIL_SERVICE|0x204,    /**< Email database failed */
-    EMAILS_ERROR_PERMISSION_DENIED                 = TIZEN_ERROR_PERMISSION_DENIED,      /**< Permission denied */
+	EMAILS_ERROR_SERVER_NOT_READY                  = TIZEN_ERROR_EMAIL_SERVICE|0x200,    /**< Server not ready */
+	EMAILS_ERROR_COMMUNICATION_WITH_SERVER_FAILED  = TIZEN_ERROR_EMAIL_SERVICE|0x201,    /**< Communication with server failed */
+	EMAILS_ERROR_OPERATION_FAILED                  = TIZEN_ERROR_EMAIL_SERVICE|0x202,    /**< Operation failed */
+	EMAILS_ERROR_ACCOUNT_NOT_FOUND                 = TIZEN_ERROR_EMAIL_SERVICE|0x203,    /**< Email account not found */
+	EMAILS_ERROR_DB_FAILED                         = TIZEN_ERROR_EMAIL_SERVICE|0x204,    /**< Email database failed */
+	EMAILS_ERROR_PERMISSION_DENIED                 = TIZEN_ERROR_PERMISSION_DENIED,      /**< Permission denied */
 } email_error_e;
 
 /**
