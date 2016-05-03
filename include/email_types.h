@@ -38,14 +38,14 @@ extern "C"
 
 /**
  * @brief   The email message handle.
- * @since_tizen 2.3
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 3.0 @endif
  */
 typedef struct email_s *email_h;
 
 
 /**
  * @brief  Enumeration for the result values of email transport.
- * @since_tizen 2.3
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 3.0 @endif
  */
 typedef enum {
 	EMAIL_SENDING_FAILED = -1,    /**< Email sending failed */
@@ -55,7 +55,7 @@ typedef enum {
 
 /**
  * @brief  Enumeration for the email recipient types.
- * @since_tizen 2.3
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 3.0 @endif
  */
 typedef enum {
 	EMAIL_RECIPIENT_TYPE_TO = 1, /**< Normal recipient */

@@ -40,7 +40,7 @@ extern "C"
 
 /**
  * @brief   Creates an email message handle for sending an email message.
- * @since_tizen 2.3
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 3.0 @endif
  * @privlevel public
  * @privilege %http://tizen.org/privilege/email
  *
@@ -54,6 +54,7 @@ extern "C"
  * @retval  #EMAILS_ERROR_NONE                  Successful
  * @retval  #EMAILS_ERROR_OUT_OF_MEMORY         Out of memory
  * @retval  #EMAILS_ERROR_ACCOUNT_NOT_FOUND     Email account not found
+ * @retval  #EMAILS_ERROR_PERMISSION_DENIED     The application does not have the privilege to call this method
  *
  * @pre      At least one email account should be set up on the device.
  *
@@ -63,7 +64,7 @@ int email_create_message(email_h *email);
 
 /**
  * @brief   Destroys the email message handle and releases all its resources.
- * @since_tizen 2.3
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 3.0 @endif
  *
  * @param[in]  email  The handle to the email message
  *
@@ -80,7 +81,7 @@ int email_destroy_message(email_h email);
 
 /**
  * @brief   Sets a subject of the email message.
- * @since_tizen 2.3
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 3.0 @endif
  *
  * @privlevel public
  * @privilege %http://tizen.org/privilege/email
@@ -94,6 +95,7 @@ int email_destroy_message(email_h email);
  * @retval  #EMAILS_ERROR_NONE               Successful
  * @retval  #EMAILS_ERROR_INVALID_PARAMETER  Invalid parameter
  * @retval  #EMAILS_ERROR_OUT_OF_MEMORY      Out of memory
+ * @retval  #EMAILS_ERROR_PERMISSION_DENIED  The application does not have the privilege to call this method
  *
  * @pre     An email message handle is created using email_create_message().
  *
@@ -105,7 +107,7 @@ int email_set_subject(email_h email, const char *subject);
  * @brief   Populates a body of the email message.
  * @details Email message body means the text data to be delivered.
  *
- * @since_tizen 2.3
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 3.0 @endif
  *
  * @privlevel public
  * @privilege %http://tizen.org/privilege/mediastorage
@@ -119,6 +121,7 @@ int email_set_subject(email_h email, const char *subject);
  * @retval  #EMAILS_ERROR_NONE              Successful
  * @retval  #EMAILS_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval  #EMAILS_ERROR_OPERATION_FAILED  Operation failed
+ * @retval  #EMAILS_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  *
  * @pre     An email message handle is created using email_create_message().
  *
@@ -130,7 +133,7 @@ int email_set_body(email_h email, const char *body);
  * @brief   Adds a recipient to the email message.
  * @details The email API supports sending an email message to multiple recipients.
  *
- * @since_tizen 2.3
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 3.0 @endif
  *
  * @remarks Email address should be in standard format (as described in
  *          Internet standards RFC 5321 and RFC 5322).
@@ -155,7 +158,7 @@ int email_add_recipient(email_h email, email_recipient_type_e type, const char *
 
 /**
  * @brief   Removes all recipients for the email message.
- * @since_tizen 2.3
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 3.0 @endif
  *
  * @param[in]  email  The handle to the email message
  *
@@ -176,9 +179,11 @@ int email_remove_all_recipients(email_h email);
  * @details It should be used to add a file to the attachment list
  *          of the email message.
  *
- * @since_tizen 2.3
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 3.0 @endif
  *
  * @remarks  The maximum attachment file size is 10MB.
+ *           http://tizen.org/privilege/mediastorage is needed if input or output path are relevant to media storage
+ *           http://tizen.org/privilege/externalstorage is needed if input or output path are relevant to external storage.
  *
  * @param[in]   email       The handle to the email message
  * @param[in]   filepath    The absolute full path of the file to be attached
@@ -189,6 +194,7 @@ int email_remove_all_recipients(email_h email);
  * @retval  #EMAILS_ERROR_NONE              Successful
  * @retval  #EMAILS_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval  #EMAILS_ERROR_OUT_OF_MEMORY     Out of memory
+ * @retval  #EMAILS_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  *
  * @pre     An email message handle is created using email_create_message().
  *
@@ -199,7 +205,7 @@ int email_add_attach(email_h email, const char *filepath);
 
 /**
  * @brief   Clears all attachments of the email message.
- * @since_tizen 2.3
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 3.0 @endif
  *
  * @param[in]  email  The handle to the email message
  *
@@ -218,12 +224,10 @@ int email_remove_all_attachments(email_h email);
 
 /**
  * @brief   Saves the email message at outbox.
- * @since_tizen 2.3
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 3.0 @endif
  *
  * @privlevel public
  * @privilege %http://tizen.org/privilege/email
- *
- * @remarks Get the ID of mail.
  *
  * @param[in]  email  The handle to the email message
  *
@@ -233,6 +237,7 @@ int email_remove_all_attachments(email_h email);
  * @retval  #EMAILS_ERROR_NONE                             Successful
  * @retval  #EMAILS_ERROR_COMMUNICATION_WITH_SERVER_FAILED Communication with server failed.
  * @retval  #EMAILS_ERROR_INVALID_PARAMETER                Invalid parameter
+ * @retval  #EMAILS_ERROR_PERMISSION_DENIED 		   The application does not have the privilege to call this method
  *
  * @pre     An email message handle is created using email_create_message().
  *
@@ -246,7 +251,7 @@ int email_save_message(email_h email);
 
 /**
  * @brief   Sends the email message.
- * @since_tizen 2.3
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 3.0 @endif
  *
  *
  * @remarks In order to check whether sending a message succeeds,
@@ -275,7 +280,7 @@ int email_send_message(email_h email, bool save_to_sentbox);
  * @brief   Called when the process of sending an email finishes.
  * @details You can check whether sending an email succeeds using this function.
  *
- * @since_tizen 2.3
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 3.0 @endif
  *
  * @param[in]   email       The handle to the email message
  * @param[in]   result      The result of email message sending \n
@@ -294,7 +299,7 @@ typedef void (*email_message_sent_cb)(email_h email, email_sending_e result, voi
  * @brief   Registers a callback function to be invoked when an email message is sent.
  * @details You will be notified when sending a message finishes and check whether it succeeds using this function.
  *
- * @since_tizen 2.3
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 3.0 @endif
  *
  * @param[in]  email      The handle to the email message
  * @param[in]  callback   The callback function to register
@@ -316,7 +321,7 @@ int email_set_message_sent_cb(email_h email, email_message_sent_cb callback, voi
 
 /**
  * @brief   Unregisters the callback function.
- * @since_tizen 2.3
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 3.0 @endif
  *
  * @param[in]  msg  The handle to the email message
  *

@@ -37,7 +37,7 @@ extern "C"
 
 /**
  *  @brief    Enumeration for error codes for email API.
- *  @since_tizen 2.3
+ *  @since_tizen @if MOBILE 2.3 @elseif WEARABLE 3.0 @endif
  */
 typedef enum {
 	EMAILS_ERROR_NONE                              = TIZEN_ERROR_NONE,                   /**< Successful */
